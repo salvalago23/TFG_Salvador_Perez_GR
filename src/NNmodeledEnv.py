@@ -1,16 +1,17 @@
 import numpy as np
 import pygame
 
-import gymnasium as gym
-from gymnasium import spaces
-
+import gym
+from gym import spaces
+import keras
 import tensorflow as tf
 
 class NNGridWorldEnv(gym.Env):
     def __init__(self, maze, grid_model_path, reward_model_path):
         self.maze = np.array(maze)  # Maze represented as a 2D numpy array
-        self.start_pos = np.concatenate(np.where(self.maze == 'S'), dtype=int)  # Starting position
-        self.goal_pos = np.concatenate(np.where(self.maze == 'G'), dtype=int)  # Goal position
+        self.start_pos = (np.concatenate(np.where(self.maze == 'S'))).astype(int)  # Starting position
+        self.goal_pos = (np.concatenate(np.where(self.maze == 'G'))).astype(int)  # Goal position
+
         #self.current_pos = self.start_pos #starting position is current posiiton of agent
         self.num_rows, self.num_cols = self.maze.shape
         # Observations are dictionaries with the agent's and the target's location.
@@ -36,8 +37,21 @@ class NNGridWorldEnv(gym.Env):
 
         # Load models
         print("Loading models...")
-        self.grid_model = tf.keras.saving.load_model(grid_model_path)
-        self.reward_model = tf.keras.saving.load_model(reward_model_path)
+
+        oculta1 = keras.layers.Dense(units=48, input_shape=(3,), activation='relu')
+        salida1 = keras.layers.Dense(units=2)
+        salida2 = keras.layers.Dense(units=1)
+
+        self.grid_model = keras.Sequential([oculta1, salida1])
+        self.reward_model = keras.Sequential([oculta1, salida2])
+
+        self.grid_model.compile(optimizer='adam', loss='mean_squared_error')
+        self.reward_model.compile(optimizer='adam', loss='mean_squared_error')
+
+        self.grid_model.load_weights(grid_model_path)
+
+        self.reward_model.load_weights(reward_model_path)
+
         print("Models loaded")
 
         # Initialize Pygame
@@ -92,7 +106,8 @@ class NNGridWorldEnv(gym.Env):
         terminated = np.array_equal(self._agent_location, self._target_location)
         observation = self._get_obs()
 
-        return observation, reward, terminated, False, {}
+
+        return observation, reward, terminated, False, ""
     
 
     def render(self):
