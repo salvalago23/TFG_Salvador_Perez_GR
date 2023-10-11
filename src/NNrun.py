@@ -24,7 +24,7 @@ reward_model_path = '../data/models/modelo_reward.h5'
 env = gym.make('grid-v0', maze=maze, grid_model_path=grid_model_path, reward_model_path=reward_model_path, max_episode_steps=500)
 
 with open(f"../data/csv/history4.csv", 'a') as f:
-    f.write(f"step,y,x,action,next_y,next_x,reward,done\n")
+    #f.write(f"step,y,x,action,next_y,next_x,reward,done\n")
     for i in range(1):
         obs, _ = env.reset()
         #env.render()
