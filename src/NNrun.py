@@ -17,8 +17,8 @@ maze = [
     ['S', '.', '#', '.', '.'],
 ]
 
-grid_model_path = '../data/models/_modelo_entorno.h5'
-reward_model_path = '../data/models/_modelo_reward.h5'
+grid_model_path = '../data/models/modelo_entorno.h5'
+reward_model_path = '../data/models/modelo_reward.h5'
 
 # Test the environment
 env = gym.make('grid-v0', maze=maze, grid_model_path=grid_model_path, reward_model_path=reward_model_path, max_episode_steps=500)
