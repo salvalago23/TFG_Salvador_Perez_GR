@@ -38,19 +38,8 @@ class NNGridWorldEnv(gym.Env):
         # Load models
         print("Loading models...")
 
-        oculta1 = keras.layers.Dense(units=48, input_shape=(3,), activation='relu')
-        salida1 = keras.layers.Dense(units=2)
-        salida2 = keras.layers.Dense(units=1)
-
-        self.grid_model = keras.Sequential([oculta1, salida1])
-        self.reward_model = keras.Sequential([oculta1, salida2])
-
-        self.grid_model.compile(optimizer='adam', loss='mean_squared_error')
-        self.reward_model.compile(optimizer='adam', loss='mean_squared_error')
-
-        self.grid_model.load_weights(grid_model_path)
-
-        self.reward_model.load_weights(reward_model_path)
+        self.grid_model = tf.keras.models.load_model(grid_model_path)
+        self.reward_model = tf.keras.models.load_model(reward_model_path)
 
         print("Models loaded")
 
