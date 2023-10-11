@@ -9,8 +9,8 @@ import tensorflow as tf
 class NNGridWorldEnv(gym.Env):
     def __init__(self, maze, grid_model_path, reward_model_path):
         self.maze = np.array(maze)  # Maze represented as a 2D numpy array
-        self.start_pos = np.concatenate(np.where(self.maze == 'S'), dtype=int)  # Starting position
-        self.goal_pos = np.concatenate(np.where(self.maze == 'G'), dtype=int)  # Goal position
+        self.start_pos = (np.concatenate(np.where(self.maze == 'S'))).astype(int)  # Starting position
+        self.goal_pos = (np.concatenate(np.where(self.maze == 'G'))).astype(int)  # Goal position
         #self.current_pos = self.start_pos #starting position is current posiiton of agent
         self.num_rows, self.num_cols = self.maze.shape
         # Observations are dictionaries with the agent's and the target's location.
@@ -36,8 +36,8 @@ class NNGridWorldEnv(gym.Env):
 
         # Load models
         print("Loading models...")
-        self.grid_model = tf.keras.saving.load_model(grid_model_path)
-        self.reward_model = tf.keras.saving.load_model(reward_model_path)
+        self.grid_model = tf.keras.models.load_model(grid_model_path)
+        self.reward_model = tf.keras.models.load_model(reward_model_path)
         print("Models loaded")
 
         # Initialize Pygame
