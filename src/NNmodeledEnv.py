@@ -37,10 +37,8 @@ class NNGridWorldEnv(gym.Env):
 
         # Load models
         print("Loading models...")
-
         self.grid_model = tf.keras.models.load_model(grid_model_path)
         self.reward_model = tf.keras.models.load_model(reward_model_path)
-
         print("Models loaded")
 
         # Initialize Pygame
