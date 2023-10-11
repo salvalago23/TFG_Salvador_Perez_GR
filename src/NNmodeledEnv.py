@@ -11,7 +11,6 @@ class NNGridWorldEnv(gym.Env):
         self.maze = np.array(maze)  # Maze represented as a 2D numpy array
         self.start_pos = (np.concatenate(np.where(self.maze == 'S'))).astype(int)  # Starting position
         self.goal_pos = (np.concatenate(np.where(self.maze == 'G'))).astype(int)  # Goal position
-
         #self.current_pos = self.start_pos #starting position is current posiiton of agent
         self.num_rows, self.num_cols = self.maze.shape
         # Observations are dictionaries with the agent's and the target's location.
