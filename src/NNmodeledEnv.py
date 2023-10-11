@@ -43,11 +43,11 @@ class NNGridWorldEnv(gym.Env):
         # Initialize Pygame
         #pygame.init()
         self.cell_size = 125
-        self.screen = pygame.display.set_mode((self.num_cols * self.cell_size, self.num_rows * self.cell_size))
+        #self.screen = pygame.display.set_mode((self.num_cols * self.cell_size, self.num_rows * self.cell_size))
 
     def _get_obs(self):
         return {"agent": self._agent_location, "target": self._target_location}
-
+    
     def _is_valid_position(self, pos):
         row, col = pos
    
@@ -110,17 +110,17 @@ class NNGridWorldEnv(gym.Env):
                 except Exception as e:
                     print('Initial state')"""
 
-                if self.maze[row, col] == '#':  # Obstacle
-                    pygame.draw.rect(self.screen, (0, 0, 0), (cell_left, cell_top, self.cell_size, self.cell_size))
-                elif self.maze[row, col] == 'S':  # Starting position
-                    pygame.draw.rect(self.screen, (0, 255, 0), (cell_left, cell_top, self.cell_size, self.cell_size))
-                elif self.maze[row, col] == 'G':  # Goal position
-                    pygame.draw.rect(self.screen, (255, 0, 0), (cell_left, cell_top, self.cell_size, self.cell_size))
+                #if self.maze[row, col] == '#':  # Obstacle
+                    #pygame.draw.rect(self.screen, (0, 0, 0), (cell_left, cell_top, self.cell_size, self.cell_size))
+                #elif self.maze[row, col] == 'S':  # Starting position
+                    #pygame.draw.rect(self.screen, (0, 255, 0), (cell_left, cell_top, self.cell_size, self.cell_size))
+                #elif self.maze[row, col] == 'G':  # Goal position
+                    #pygame.draw.rect(self.screen, (255, 0, 0), (cell_left, cell_top, self.cell_size, self.cell_size))
                 
-                if (self._agent_location[0] == row) and (self._agent_location[1] == col):  # Agent position
-                    pygame.draw.rect(self.screen, (0, 0, 255), (cell_left, cell_top, self.cell_size, self.cell_size))
+                #if (self._agent_location[0] == row) and (self._agent_location[1] == col):  # Agent position
+                    #pygame.draw.rect(self.screen, (0, 0, 255), (cell_left, cell_top, self.cell_size, self.cell_size))
     
-        pygame.display.update()
+        #pygame.display.update()
 
 
     def close(self):
