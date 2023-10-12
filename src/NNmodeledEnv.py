@@ -1,8 +1,8 @@
 import numpy as np
 import pygame
 
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium import spaces
 import keras
 import tensorflow as tf
 
@@ -93,7 +93,7 @@ class NNGridWorldEnv(gym.Env):
         observation = self._get_obs()
 
 
-        return observation, reward, terminated, False, ""
+        return observation, reward, terminated, False, {}
     
 
     def render(self):
