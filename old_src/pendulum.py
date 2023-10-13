@@ -15,8 +15,8 @@ ENV_NAME = 'Pendulum-v1'
 
 # Get the environment and extract the number of actions.
 env = gym.make(ENV_NAME)
-np.random.seed(123)
-env.seed(123)
+#np.random.seed(123)
+#env.seed(123)
 assert len(env.action_space.shape) == 1
 nb_actions = 2#env.action_space.shape[0]
 

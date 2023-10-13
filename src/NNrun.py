@@ -35,11 +35,11 @@ with open(f"../data/csv/history4.csv", 'a') as f:
             #pygame.event.get()
             action = env.action_space.sample()  # Random action selection
             
-            prev_state = [obs['agent'][0], obs['agent'][1], action]
+            prev_state = [obs[0], obs[1], action]
 
             obs, rew, done, _, _ = env.step(action)
 
-            f.write(f"{t},{prev_state[0]},{prev_state[1]},{prev_state[2]},{obs['agent'][0]},{obs['agent'][1]},{rew},{done}\n")
+            f.write(f"{t},{prev_state[0]},{prev_state[1]},{prev_state[2]},{obs[0]},{obs[1]},{rew},{done}\n")
             
             t += 1
             #env.render()
