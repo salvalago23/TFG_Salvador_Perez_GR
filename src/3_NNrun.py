@@ -6,7 +6,7 @@ from gymnasium import spaces
 #import numpy as np
 
 # Register the environment
-gym.register(id='grid-v0', entry_point='environments:NNGridWorldEnv')
+gym.register(id='grid-v0', entry_point='0_Environments:NNGridWorldEnv')
 
 #Maze config
 maze = [

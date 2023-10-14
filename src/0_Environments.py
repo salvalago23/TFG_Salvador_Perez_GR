@@ -11,7 +11,6 @@ class NNGridWorldEnv(gym.Env):
         self.maze = np.array(maze)  # Maze represented as a 2D numpy array
         self.start_pos = (np.concatenate(np.where(self.maze == 'S'))).astype(np.int32)  # Starting position
         self.goal_pos = (np.concatenate(np.where(self.maze == 'G'))).astype(np.int32)  # Goal position
-        #self.current_pos = self.start_pos #starting position is current posiiton of agent
         self.num_rows, self.num_cols = self.maze.shape
 
         self.observation_space = spaces.Box(low=np.array([0, 0]), high=np.array([self.num_rows, self.num_cols]), dtype=np.int32)
@@ -28,16 +27,10 @@ class NNGridWorldEnv(gym.Env):
         #self.cell_size = 125
         #self.screen = pygame.display.set_mode((self.num_cols * self.cell_size, self.num_rows * self.cell_size))
 
-
     def _is_valid_position(self, pos):
         row, col = pos
-   
-        # If agent goes out of the grid
-        if row < 0 or col < 0 or row >= self.num_rows or col >= self.num_cols:
-            return False
-
-        # If the agent hits an obstacle
-        if self.maze[row, col] == '#':
+        # If agent goes out of the grid or if the agent hits an obstacle
+        if row < 0 or col < 0 or row >= self.num_rows or col >= self.num_cols or self.maze[row, col] == '#':
             return False
         return True
 
@@ -67,17 +60,12 @@ class NNGridWorldEnv(gym.Env):
     """def render(self):
         # Clear the screen
         self.screen.fill((255, 255, 255))  
-        print(self._agent_location[0], self._agent_location[1])
+        #print(self._agent_location[0], self._agent_location[1])
         # Draw env elements one cell at a time
         for row in range(self.num_rows):
             for col in range(self.num_cols):
                 cell_left = col * self.cell_size
                 cell_top = row * self.cell_size
-            
-                try:
-                    print(np.array(self.current_pos)==np.array([row,col]).reshape(-1,1))
-                except Exception as e:
-                    print('Initial state')
 
                 #if self.maze[row, col] == '#':  # Obstacle
                     #pygame.draw.rect(self.screen, (0, 0, 0), (cell_left, cell_top, self.cell_size, self.cell_size))
@@ -101,20 +89,12 @@ class NNGridWorldEnv(gym.Env):
 class CSVGeneratorEnv(gym.Env):
     def __init__(self, maze):
         self.maze = np.array(maze)  # Maze represented as a 2D numpy array
-        self.start_pos = np.concatenate(np.where(self.maze == 'S'), dtype=int)  # Starting position
-        self.goal_pos = np.concatenate(np.where(self.maze == 'G'), dtype=int)  # Goal position
-        #self.current_pos = self.start_pos #starting position is current posiiton of agent
+        self.start_pos = (np.concatenate(np.where(self.maze == 'S'))).astype(np.int32)  # Starting position
+        self.goal_pos = (np.concatenate(np.where(self.maze == 'G'))).astype(np.int32)  # Goal position
         self.num_rows, self.num_cols = self.maze.shape
-        # Observations are dictionaries with the agent's and the target's location.
-        # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         self.size = self.num_rows  # The size of the square grid
 
-        self.observation_space = spaces.Dict(
-            {
-                "agent": spaces.Box(0, self.num_rows - 1, shape=(2,), dtype=int),
-                "target": spaces.Box(0, self.num_rows - 1, shape=(2,), dtype=int),
-            }
-        )
+        self.observation_space = spaces.Box(low=np.array([0, 0]), high=np.array([self.num_rows, self.num_cols]), dtype=np.int32)
 
         # We have 4 actions, corresponding to "right", "up", "left", "down"
         self.action_space = spaces.Discrete(4)
@@ -131,18 +111,10 @@ class CSVGeneratorEnv(gym.Env):
         self.cell_size = 125
         self.screen = pygame.display.set_mode((self.num_cols * self.cell_size, self.num_rows * self.cell_size))
 
-    def _get_obs(self):
-        return {"agent": self._agent_location, "target": self._target_location}
-
     def _is_valid_position(self, pos):
         row, col = pos
-   
-        # If agent goes out of the grid
-        if row < 0 or col < 0 or row >= self.num_rows or col >= self.num_cols:
-            return False
-
-        # If the agent hits an obstacle
-        if self.maze[row, col] == '#':
+        # If agent goes out of the grid or if the agent hits an obstacle
+        if row < 0 or col < 0 or row >= self.num_rows or col >= self.num_cols or self.maze[row, col] == '#':
             return False
         return True
 
@@ -150,10 +122,7 @@ class CSVGeneratorEnv(gym.Env):
         self._agent_location = self.start_pos 
         self._target_location = self.goal_pos
 
-        observation = self._get_obs()
-
-        return observation, {}
-    
+        return self._agent_location, {}
 
     def step(self, action):
         # Map the action (element of {0,1,2,3}) to the direction we walk in
@@ -165,28 +134,21 @@ class CSVGeneratorEnv(gym.Env):
         if self._is_valid_position(new_pos):
             self._agent_location = new_pos
 
-        # An episode is done iff the agent has reached the target
+        # An episode is done if the agent has reached the target
         terminated = np.array_equal(self._agent_location, self._target_location)
         reward = 1 if terminated else 0  # Binary sparse rewards
-        observation = self._get_obs()
 
-        return observation, reward, terminated, False, {}
-    
+        return self._agent_location, reward, terminated, False, {}
 
     def render(self):
         # Clear the screen
         self.screen.fill((255, 255, 255))  
-        print(self._agent_location[0], self._agent_location[1])
+        #print(self._agent_location[0], self._agent_location[1])
         # Draw env elements one cell at a time
         for row in range(self.num_rows):
             for col in range(self.num_cols):
                 cell_left = col * self.cell_size
                 cell_top = row * self.cell_size
-            
-                """try:
-                    print(np.array(self.current_pos)==np.array([row,col]).reshape(-1,1))
-                except Exception as e:
-                    print('Initial state')"""
 
                 if self.maze[row, col] == '#':  # Obstacle
                     pygame.draw.rect(self.screen, (0, 0, 0), (cell_left, cell_top, self.cell_size, self.cell_size))
@@ -199,7 +161,6 @@ class CSVGeneratorEnv(gym.Env):
                     pygame.draw.rect(self.screen, (0, 0, 255), (cell_left, cell_top, self.cell_size, self.cell_size))
     
         pygame.display.update()
-
 
     def close(self):
         if self.screen is not None:

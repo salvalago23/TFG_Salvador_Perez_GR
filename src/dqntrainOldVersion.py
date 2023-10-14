@@ -136,7 +136,7 @@ env = gym.make('CartPole-v0')
 """
 
 # Get the environment and extract the number of actions.
-gym.register(id='grid-v0', entry_point='environments:NNGridWorldEnv')
+gym.register(id='grid-v0', entry_point='0_Environments:NNGridWorldEnv')
 #Maze config
 maze = [
     ['.', '.', '#', '.', 'G'],

@@ -1,11 +1,9 @@
 import gymnasium as gym
-from gymnasium import spaces
-
-#import pygame
+import pygame
 #import numpy as np
 
 # Register the environment
-gym.register(id='grid-v0', entry_point='environments:CSVGeneratorEnv')
+gym.register(id='grid-v0', entry_point='0_Environments:CSVGeneratorEnv')
 
 #Maze config
 maze = [
@@ -31,16 +29,16 @@ with open(f"../data/csv/history.csv", 'a') as f:
             #pygame.event.get()
             action = env.action_space.sample()  # Random action selection
             
-            prev_state = [obs['agent'][0], obs['agent'][1], action]
+            prev_state = [obs[0], obs[1], action]
 
             obs, rew, done, _, _ = env.step(action)
 
-            #f.write(f"{t},{prev_state[0]},{prev_state[1]},{prev_state[2]},{obs['agent'][0]},{obs['agent'][1]},{rew},{done}\n")
+            f.write(f"{t},{prev_state[0]},{prev_state[1]},{prev_state[2]},{obs[0]},{obs[1]},{rew},{done}\n")
             
             t += 1
             #env.render()
 
-            #pygame.time.wait(20)
+            #pygame.time.wait(100)
         print("Agente", i+1, "terminado en", t, "pasos")
 
 #env.close()
