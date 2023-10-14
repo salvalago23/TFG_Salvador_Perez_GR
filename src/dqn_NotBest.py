@@ -42,74 +42,6 @@ class DQN(nn.Module):
         return self.layer3(x)
 
 
-"""
-env = gym.make('CartPole-v0')
-"""
-
-# Get the environment and extract the number of actions.
-gym.register(id='grid-v0', entry_point='NNmodeledEnv:NNGridWorldEnv')
-#Maze config
-maze = [
-    ['.', '.', '#', '.', 'G'],
-    ['.', '.', '#', '.', '.'],
-    ['.', '.', '.', '.', '.'],
-    ['.', '.', '#', '.', '.'],
-    ['S', '.', '#', '.', '.'],
-]
-
-grid_model_path = '../data/models/modelo_entorno.h5'
-reward_model_path = '../data/models/modelo_reward.h5'
-
-# Test the environment
-env = gym.make('grid-v0', maze=maze, grid_model_path=grid_model_path, reward_model_path=reward_model_path, max_episode_steps=500)
-
-
-# set up matplotlib
-is_ipython = 'inline' in matplotlib.get_backend()
-if is_ipython:
-    from IPython import display
-
-plt.ion()
-
-# if GPU is to be used
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-Transition = namedtuple('Transition',
-                        ('state', 'action', 'next_state', 'reward'))
-
-
-# BATCH_SIZE is the number of transitions sampled from the replay buffer
-# GAMMA is the discount factor as mentioned in the previous section
-# EPS_START is the starting value of epsilon
-# EPS_END is the final value of epsilon
-# EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
-# TAU is the update rate of the target network
-# LR is the learning rate of the ``AdamW`` optimizer
-BATCH_SIZE = 128
-GAMMA = 0.99
-EPS_START = 0.9
-EPS_END = 0.05
-EPS_DECAY = 1000
-TAU = 0.005
-LR = 1e-4
-
-# Get number of actions from gym action space
-n_actions = env.action_space.n
-# Get the number of state observations
-state, info = env.reset()
-n_observations = len(state)
-
-policy_net = DQN(n_observations, n_actions).to(device)
-target_net = DQN(n_observations, n_actions).to(device)
-target_net.load_state_dict(policy_net.state_dict())
-
-optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
-memory = ReplayMemory(10000)
-
-
-steps_done = 0
-
-
 def select_action(state):
     global steps_done
     sample = random.random()
@@ -125,8 +57,6 @@ def select_action(state):
     else:
         return torch.tensor([[env.action_space.sample()]], device=device, dtype=torch.long)
 
-
-episode_durations = []
 
 
 def plot_durations(show_result=False):
@@ -201,13 +131,83 @@ def optimize_model():
     optimizer.step()
 
 
+"""
+env = gym.make('CartPole-v0')
+"""
 
+# Get the environment and extract the number of actions.
+gym.register(id='grid-v0', entry_point='NNmodeledEnv:NNGridWorldEnv')
+#Maze config
+maze = [
+    ['.', '.', '#', '.', 'G'],
+    ['.', '.', '#', '.', '.'],
+    ['.', '.', '.', '.', '.'],
+    ['.', '.', '#', '.', '.'],
+    ['S', '.', '#', '.', '.'],
+]
+
+grid_model_path = '../data/models/modelo_entorno.h5'
+reward_model_path = '../data/models/modelo_reward.h5'
+
+# Test the environment
+env = gym.make('grid-v0', maze=maze, grid_model_path=grid_model_path, reward_model_path=reward_model_path)#, max_episode_steps=500)
+
+
+# set up matplotlib
+is_ipython = 'inline' in matplotlib.get_backend()
+if is_ipython:
+    from IPython import display
+
+plt.ion()
+
+# if GPU is to be used
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+Transition = namedtuple('Transition',
+                        ('state', 'action', 'next_state', 'reward'))
+
+
+# BATCH_SIZE is the number of transitions sampled from the replay buffer
+# GAMMA is the discount factor as mentioned in the previous section
+# EPS_START is the starting value of epsilon
+# EPS_END is the final value of epsilon
+# EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
+# TAU is the update rate of the target network
+# LR is the learning rate of the ``AdamW`` optimizer
+BATCH_SIZE = 128
+GAMMA = 0.99
+EPS_START = 0.9
+EPS_END = 0.05
+EPS_DECAY = 1000
+TAU = 0.005
+LR = 1e-4
+
+# Get number of actions from gym action space
+n_actions = env.action_space.n
+# Get the number of state observations
+state, info = env.reset()
+n_observations = len(state)
+
+policy_net = DQN(n_observations, n_actions).to(device)
+target_net = DQN(n_observations, n_actions).to(device)
+target_net.load_state_dict(policy_net.state_dict())
+
+optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
+memory = ReplayMemory(10000)
+
+
+steps_done = 0
+
+episode_durations = []
 
 
 if torch.cuda.is_available():
     num_episodes = 600
 else:
     num_episodes = 50
+
+
+print("First episodes are purely random and may take a while to finish...")
 
 for i_episode in range(num_episodes):
     # Initialize the environment and get it's state
@@ -242,11 +242,16 @@ for i_episode in range(num_episodes):
         # θ′ ← τ θ + (1 −τ )θ′
         target_net_state_dict = target_net.state_dict()
         policy_net_state_dict = policy_net.state_dict()
+        
         for key in policy_net_state_dict:
             target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
         target_net.load_state_dict(target_net_state_dict)
 
+        #if (t%100 == 0) and (t != 0):
+            #print("Episode:", i_episode, "of", num_episodes," is in Step:", t)
+
         if done:
+
             episode_durations.append(t + 1)
             plot_durations()
             break
@@ -255,6 +260,10 @@ for i_episode in range(num_episodes):
 
 
 print('Complete')
+#print all the episode durations and the mean (with math)
+print(episode_durations)
+print("Mean: ", sum(episode_durations)/len(episode_durations))
+
 plot_durations(show_result=True)
 plt.ioff()
 plt.show()
