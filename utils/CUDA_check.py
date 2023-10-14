@@ -1,4 +1,3 @@
-
 import torch
  
 print("Is CUDA supported by this system?", torch.cuda.is_available())

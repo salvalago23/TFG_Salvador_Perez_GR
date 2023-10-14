@@ -11,6 +11,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
+from envs.createEnvs import createNNEnv
 
 class ReplayMemory(object):
     def __init__(self, capacity):
@@ -135,23 +136,7 @@ def optimize_model():
 env = gym.make('CartPole-v0')
 """
 
-# Get the environment and extract the number of actions.
-gym.register(id='grid-v0', entry_point='0_Environments:NNGridWorldEnv')
-#Maze config
-maze = [
-    ['.', '.', '#', '.', 'G'],
-    ['.', '.', '#', '.', '.'],
-    ['.', '.', '.', '.', '.'],
-    ['.', '.', '#', '.', '.'],
-    ['S', '.', '#', '.', '.'],
-]
-
-grid_model_path = '../data/models/modelo_entorno.h5'
-reward_model_path = '../data/models/modelo_reward.h5'
-
-# Test the environment
-env = gym.make('grid-v0', maze=maze, grid_model_path=grid_model_path, reward_model_path=reward_model_path)#, max_episode_steps=500)
-
+env = createNNEnv()
 
 # set up matplotlib
 is_ipython = 'inline' in matplotlib.get_backend()
