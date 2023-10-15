@@ -10,7 +10,7 @@ import torch.optim as optim
 
 class QNetwork(nn.Module):
     """ Actor (Policy) Model."""
-    def __init__(self, state_size, action_size, seed, fc1_unit=64, fc2_unit = 64):
+    def __init__(self, state_size, action_size, seed, fc1_unit=64, fc2_unit=64):
         """
         Initialize parameters and build model.
         Params
@@ -46,27 +46,23 @@ UPDATE_EVERY = 4        # how often to update the network
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-class Agent():
+class DQNAgent():
     """Interacts with and learns form environment."""
-    
-    def __init__(self, state_size, action_size, seed):
+    def __init__(self, state_size, action_size, seed, fc1_unit=64, fc2_unit=64):
         """Initialize an Agent object.
-        
         Params
         =======
             state_size (int): dimension of each state
             action_size (int): dimension of each action
             seed (int): random seed
         """
-        
         self.state_size = state_size
         self.action_size = action_size
         self.seed = random.seed(seed)
         
-        
         #Q- Network
-        self.qnetwork_local = QNetwork(state_size, action_size, seed).to(device)
-        self.qnetwork_target = QNetwork(state_size, action_size, seed).to(device)
+        self.qnetwork_local = QNetwork(state_size, action_size, seed, fc1_unit, fc2_unit).to(device)
+        self.qnetwork_target = QNetwork(state_size, action_size, seed, fc1_unit, fc2_unit).to(device)
         
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(),lr=LR)
         
@@ -154,7 +150,46 @@ class Agent():
         for target_param, local_param in zip(target_model.parameters(),
                                            local_model.parameters()):
             target_param.data.copy_(tau*local_param.data + (1-tau)*target_param.data)
-            
+
+
+class DDQNAgent(DQNAgent):
+    """Interacts with and learns form environment."""
+
+    def learn(self, experiences, gamma):
+        """Update value parameters using given batch of experience tuples.
+        Params
+        =======
+            experiences (Tuple[torch.Variable]): tuple of (s, a, r, s', done) tuples
+            gamma (float): discount factor
+        """
+        states, actions, rewards, next_state, dones = experiences
+        ## TODO: compute and minimize the loss
+        criterion = torch.nn.MSELoss()
+        self.qnetwork_local.train()
+        self.qnetwork_target.eval()
+        #shape of output from the model (batch_size,action_dim) = (64,4)
+        predicted_targets = self.qnetwork_local(states).gather(1,actions)
+
+        #################Updates for Double DQN learning###########################
+        self.qnetwork_local.eval()
+        with torch.no_grad():
+            actions_q_local = self.qnetwork_local(next_state).detach().max(1)[1].unsqueeze(1).long()
+            labels_next = self.qnetwork_target(next_state).gather(1,actions_q_local)
+        self.qnetwork_local.train()
+        ############################################################################
+
+        # .detach() ->  Returns a new Tensor, detached from the current graph.
+        labels = rewards + (gamma* labels_next*(1-dones))
+
+        loss = criterion(predicted_targets,labels).to(device)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        # ------------------- update target network ------------------- #
+        self.soft_update(self.qnetwork_local,self.qnetwork_target,TAU)
+
+
 class ReplayBuffer:
     """Fixed -size buffe to store experience tuples."""
     
