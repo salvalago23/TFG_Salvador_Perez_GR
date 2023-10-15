@@ -1,11 +1,15 @@
 from envs.createEnvs import createNNEnv
 #import pygame
+import time
+
 
 env = createNNEnv()
 
 with open(f"../data/csv/historyNN.csv", 'a') as f:
     f.write(f"step,y,x,action,next_y,next_x,reward,done\n")
-    for i in range(1):
+    
+    start_time = time.time()
+    for i in range(1000):
         obs, _ = env.reset()
         #env.render()
 
@@ -25,3 +29,7 @@ with open(f"../data/csv/historyNN.csv", 'a') as f:
         print("Agente", i+1, "terminado en", t, "pasos")
 
 #env.close()
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(f"Script execution time: {elapsed_time:.2f} seconds")

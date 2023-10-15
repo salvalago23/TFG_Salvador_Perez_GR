@@ -21,8 +21,8 @@ def createNNEnv():
     # Register the environment
     gym.register(id='gridNN-v0', entry_point='envs.environments:NNGridWorldEnv')
 
-    grid_model_path = '../data/models/modelo_entorno.h5'
-    reward_model_path = '../data/models/modelo_reward.h5'
+    grid_model_path = '../data/models/modelo_entorno.pt'
+    reward_model_path = '../data/models/modelo_reward.pt'
 
     # Create the environment
     env = gym.make('gridNN-v0', maze=maze, grid_model_path=grid_model_path, reward_model_path=reward_model_path, max_episode_steps=500)

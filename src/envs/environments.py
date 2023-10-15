@@ -3,8 +3,20 @@ import pygame
 
 import gymnasium as gym
 from gymnasium import spaces
-import tensorflow as tf
-#tf.compat.v1.enable_eager_execution()
+
+import torch
+import torch.nn as nn
+
+class NeuralNetwork(nn.Module):
+    def __init__(self, input_size, output_size):
+        super(NeuralNetwork, self).__init__()
+        self.fc1 = nn.Linear(input_size, 64)
+        self.fc2 = nn.Linear(64, output_size)
+
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
 
 class NNGridWorldEnv(gym.Env):
     def __init__(self, maze, grid_model_path, reward_model_path):
@@ -18,8 +30,12 @@ class NNGridWorldEnv(gym.Env):
 
         # Load models
         print("Loading models...")
-        self.grid_model = tf.keras.models.load_model(grid_model_path)
-        self.reward_model = tf.keras.models.load_model(reward_model_path)
+        self.grid_model = NeuralNetwork(3, 2)
+        self.reward_model = NeuralNetwork(3, 1)
+        self.grid_model.load_state_dict(torch.load(grid_model_path))
+        self.reward_model.load_state_dict(torch.load(reward_model_path))
+        self.grid_model.eval()
+        self.reward_model.eval()
         print("Models loaded")
 
         # Initialize Pygame
@@ -41,12 +57,15 @@ class NNGridWorldEnv(gym.Env):
         return self._agent_location, {}
     
     def step(self, action):
-        input_model = np.column_stack(np.array([self._agent_location[0], self._agent_location[1], action]))
+        #No me queda muy claro pq tiene que ser un [[[]]] y si es necesario, pero si no tiene esta forma el modelo de torch protesta
+        #pq podria ser mas lento
+        model_input = np.array([np.column_stack(np.array([float(self._agent_location[0]), float(self._agent_location[1]), float(action)]))])
+        input_tensor = torch.tensor(model_input, dtype=torch.float32)
 
         #round the values
-        new_pos = np.array(np.round(self.grid_model.predict(input_model, verbose=0)[0]), dtype=int)
-        reward = int(np.round(self.reward_model.predict(input_model, verbose=0)[0]))
-
+        new_pos = np.int32(np.round(self.grid_model(input_tensor).detach().numpy()[0][0]))
+        reward = int(np.round(self.reward_model(input_tensor).detach().numpy()))
+        
         # Check if the new position is valid
         if self._is_valid_position(new_pos):
             self._agent_location = new_pos

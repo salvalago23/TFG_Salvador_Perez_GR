@@ -46,7 +46,9 @@ class NNGridWorldEnv(gym.Env):
         #round the values
         new_pos = np.array(np.round(self.grid_model.predict(input_model, verbose=0)[0]), dtype=int)
         reward = int(np.round(self.reward_model.predict(input_model, verbose=0)[0]))
-
+        print(new_pos, reward)
+        print(type(new_pos), type(reward))
+        input()
         # Check if the new position is valid
         if self._is_valid_position(new_pos):
             self._agent_location = new_pos
