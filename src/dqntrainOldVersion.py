@@ -1,4 +1,3 @@
-import gymnasium as gym
 import math
 import random
 import matplotlib
@@ -187,7 +186,7 @@ episode_durations = []
 
 
 if torch.cuda.is_available():
-    num_episodes = 600
+    num_episodes = 3000
 else:
     num_episodes = 50
 
@@ -236,7 +235,6 @@ for i_episode in range(num_episodes):
             #print("Episode:", i_episode, "of", num_episodes," is in Step:", t)
 
         if done:
-
             episode_durations.append(t + 1)
             plot_durations()
             break
@@ -253,6 +251,8 @@ plot_durations(show_result=True)
 plt.ioff()
 plt.show()
 
+for q_value in policy_net(state).max(1)[0].view(1, 1):
+    print("Q-Value: ", q_value.item())
 
 #show stats of the model
 env.reset()
