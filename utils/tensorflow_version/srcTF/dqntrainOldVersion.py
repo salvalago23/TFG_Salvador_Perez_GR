@@ -246,6 +246,7 @@ print('Complete')
 #print all the episode durations and the mean (with math)
 print(episode_durations)
 print("Mean: ", sum(episode_durations)/len(episode_durations))
+print("Median: ", sorted(episode_durations)[len(episode_durations)//2])
 
 plot_durations(show_result=True)
 plt.ioff()
