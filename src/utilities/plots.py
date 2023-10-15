@@ -15,8 +15,9 @@ def create_dicts_Qlearning(agent):
 
     return state_value, policy
 
-def create_dicts_DQN(Qnet, env, device):
+def create_dicts_DQN(Qnet, env):
     n_rows, n_cols = env.unwrapped.num_rows, env.unwrapped.num_cols
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     state_value = defaultdict(float)
     policy = defaultdict(int)
