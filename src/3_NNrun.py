@@ -5,7 +5,7 @@ import time
 
 first_write = True
 writing_enabled = True
-num_executions = 1000
+num_executions = 1
 
 shape = "5x5"
 randomStart = True
