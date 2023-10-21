@@ -52,9 +52,9 @@ def create_grids(state_value, policy, env):
         for j in range(n_cols):
             #Grid positions [0,2], [1,2], [3,2], [4,2] are walls, so we dont want to show an action for them, instead show an X. 
             #We also dont want to show an action for the goal, so we show a G in the grid position [0,4]
-            if j == 2 and (i == 0 or i == 1 or i == 3 or i == 4):
+            if env.maze[i][j] == '#':
                 string_policy_grid[i][j] = 'X'
-            elif i == 0 and j == 4:
+            elif env.maze[i][j] == 'G':
                 string_policy_grid[i][j] = 'G'
             elif policy_grid[i][j] == 0:
                 string_policy_grid[i][j] = '↑'
