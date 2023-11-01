@@ -34,7 +34,7 @@ class NeuralNetwork(nn.Module):
 
 
 class NNGridWorldEnv(gym.Env):
-    def __init__(self, maze, grid_model_path, reward_model_path, randomStart=False, render=False):
+    def __init__(self, maze, grid_model_path, reward_model_path, randomStart, render):
         self.maze = np.array(maze["maze"])  # Maze represented as a 2D numpy array
 
         if randomStart:
@@ -135,7 +135,7 @@ class NNGridWorldEnv(gym.Env):
 
 
 class CSVGeneratorEnv(gym.Env):
-    def __init__(self, maze, randomStart=False, render=False):
+    def __init__(self, maze, randomStart, render):
         self.maze = np.array(maze["maze"])  # Maze represented as a 2D numpy array
         #choose a random starting position between maze["starting_pos"]
         #convert the position in self. maze to a "S"

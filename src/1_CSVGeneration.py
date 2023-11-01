@@ -1,13 +1,13 @@
 from envs.createEnvs import createCSVEnv
 import pygame
 
-first_write = True
-writing_enabled = True
+first_write = False
+writing_enabled = False
 num_executions = 1000
 
 shape = "14x14"
 randomStart = True
-render = False
+render = True
 
 if shape == "5x5":
     csv_name  = "history5x5"
