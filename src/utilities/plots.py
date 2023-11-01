@@ -52,9 +52,9 @@ def create_grids(state_value, policy, env):
         for j in range(n_cols):
             #Grid positions [0,2], [1,2], [3,2], [4,2] are walls, so we dont want to show an action for them, instead show an X. 
             #We also dont want to show an action for the goal, so we show a G in the grid position [0,4]
-            if env.maze[i][j] == '#':
+            if env.unwrapped.maze[i][j] == '#':
                 string_policy_grid[i][j] = 'X'
-            elif env.maze[i][j] == 'G':
+            elif env.unwrapped.maze[i][j] == 'G':
                 string_policy_grid[i][j] = 'G'
             elif policy_grid[i][j] == 0:
                 string_policy_grid[i][j] = '↑'
@@ -149,8 +149,6 @@ def plot_trajectory(string_policy_grid, start_pos):
             next_pos = np.array([y, x + 1])
         elif char == "←":
             next_pos = np.array([y, x - 1])
-        else:
-            raise ValueError("Invalid character in the policy grid")
 
         # Append the next position to the trajectory
         trajectory.append(next_pos.tolist())
@@ -163,7 +161,7 @@ def plot_trajectory(string_policy_grid, start_pos):
     trajectory_x, trajectory_y = trajectory[:, 0], trajectory[:, 1]
 
     # Plot the trajectory on top of the grid
-    ax.plot(trajectory_y, trajectory_x, marker='o', color='purple', markersize=8, linestyle='-')
+    ax.plot(trajectory_y, trajectory_x, marker='o', color='purple', markersize=2, linestyle='-')
 
     # add a legend
     legend_elements = [
