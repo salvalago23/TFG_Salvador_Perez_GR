@@ -71,7 +71,7 @@ def create_grids(state_value, policy, env):
     return value_grid, policy_grid, string_policy_grid
 
 
-def plot_string_policy(string_policy_grid):
+"""def plot_string_policy(string_policy_grid):
     map_data = np.array(string_policy_grid)
     
     colors = ['red', 'black', 'lightgreen', 'green', 'gray', 'blue']
@@ -102,7 +102,7 @@ def plot_string_policy(string_policy_grid):
     ]
     ax.legend(handles=legend_elements, bbox_to_anchor=(1.3, 1))
 
-    return fig
+    return fig"""
 
 def plot_trajectory(string_policy_grid, start_pos):
     map_data = np.array(string_policy_grid)
