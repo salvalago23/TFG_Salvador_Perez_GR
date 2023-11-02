@@ -3,12 +3,11 @@ import pygame
 import time
 
 
-first_write = True
-writing_enabled = True
-num_executions = 1
+first_write = False
+writing_enabled = False
+num_executions = 3
 
 shape = "5x5"
-randomStart = True
 render = True
 
 if shape == "5x5":
@@ -17,7 +16,7 @@ elif shape == "14x14":
     csv_name  = "historyNN14x14"
 
 
-env = createNNEnv(shape, randomStart=randomStart, render=render)
+env = createNNEnv(shape, render=render)
 
 with open(f"../data/csv/" + csv_name + ".csv", 'a') as f:
     if first_write and writing_enabled:
@@ -26,6 +25,7 @@ with open(f"../data/csv/" + csv_name + ".csv", 'a') as f:
     start_time = time.time()
 
     for i in range(num_executions):
+        env.unwrapped.randomize_start_pos()
         obs, _ = env.reset()
         if render: env.render()
 

@@ -32,7 +32,7 @@ maze14x14 = { "starting_pos": [[0,0], [5,0], [7,0], [13,0], [13,5], [13,8], [13,
 
 mazes = {"5x5": maze5x5, "14x14": maze14x14}
 
-def createCSVEnv(shape, randomStart=False, render=False):
+def createCSVEnv(shape, render=False):
     # Register the environment
     gym.register(id='grid-v0', entry_point='envs.environments:CSVGeneratorEnv')
 
@@ -42,11 +42,11 @@ def createCSVEnv(shape, randomStart=False, render=False):
         maze = mazes["14x14"]
 
     # Create the environment
-    env = gym.make('grid-v0',maze=maze, randomStart=randomStart, render=render)#, max_episode_steps=500)
+    env = gym.make('grid-v0',maze=maze, render=render)#, max_episode_steps=500)
 
     return env
 
-def createNNEnv(shape, randomStart=False, render=False):
+def createNNEnv(shape, render=False):
     # Register the environment
     gym.register(id='gridNN-v0', entry_point='envs.environments:NNGridWorldEnv')
 
@@ -60,6 +60,6 @@ def createNNEnv(shape, randomStart=False, render=False):
         reward_model_path = '../data/models/modelo_reward14x14.pt'
 
     # Create the environment
-    env = gym.make('gridNN-v0', maze=maze, grid_model_path=grid_model_path, reward_model_path=reward_model_path, randomStart=randomStart, render=render)#, disable_env_checker=disable_env_checker, max_episode_steps=500)
+    env = gym.make('gridNN-v0', maze=maze, grid_model_path=grid_model_path, reward_model_path=reward_model_path, render=render)#, disable_env_checker=disable_env_checker, max_episode_steps=500)
 
     return env

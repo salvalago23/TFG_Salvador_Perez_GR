@@ -33,16 +33,9 @@ class NeuralNetwork(nn.Module):
 
 
 class NNGridWorldEnv(gym.Env):
-    def __init__(self, maze, grid_model_path, reward_model_path, randomStart, render):
+    def __init__(self, maze, grid_model_path, reward_model_path, render):
         self.maze = np.array(maze["maze"])  # Maze represented as a 2D numpy array
-        self.starting_pos = maze["starting_pos"] #list of possible starting positions
-
-        self.randomStart = randomStart
-        if self.randomStart:
-            #There is a predifined start position with an S in the maze. Before assigning a random start position I have to convert the older one to "."
-            self.maze[self.maze == 'S'] = '.'
-            start_pos = self.starting_pos[np.random.randint(0, len(self.starting_pos))]
-            self.maze[start_pos[0], start_pos[1]] = 'S'
+        self.starting_positions = maze["starting_pos"] #list of possible starting positions
         
         self.start_pos = (np.concatenate(np.where(self.maze == 'S'))).astype(np.int32)  # Starting position
         self.goal_pos = (np.concatenate(np.where(self.maze == 'G'))).astype(np.int32)  # Goal position
@@ -76,12 +69,12 @@ class NNGridWorldEnv(gym.Env):
             self.screen = pygame.display.set_mode((self.num_cols * self.cell_size, self.num_rows * self.cell_size))
 
     def randomize_start_pos(self):
-        # Aqui realmente con guardar las coordenadas en una variable ya valdria, pero pinto la "S" en el mapa para poder 
-        # visualizarlo más tarde
-        if self.randomStart:
-            self.maze[self.maze == 'S'] = '.'
-            start_pos = self.starting_pos[np.random.randint(0, len(self.starting_pos))]
-            self.maze[start_pos[0], start_pos[1]] = 'S'
+        # Aqui realmente con guardar las coordenadas en una variable ya valdria, pero pinto la "S" en el mapa para poder visualizarlo más tarde
+        # There is a predifined start position with an S in the maze. Before assigning a random start position I have to convert the older one to "."
+        
+        self.maze[self.maze == 'S'] = '.'
+        start_pos = self.starting_positions[np.random.randint(0, len(self.starting_positions))]
+        self.maze[start_pos[0], start_pos[1]] = 'S'
         self.start_pos = (np.concatenate(np.where(self.maze == 'S'))).astype(np.int32)
 
     def _is_valid_position(self, pos):
@@ -145,15 +138,9 @@ class NNGridWorldEnv(gym.Env):
 
 
 class CSVGeneratorEnv(gym.Env):
-    def __init__(self, maze, randomStart, render):
+    def __init__(self, maze, render):
         self.maze = np.array(maze["maze"])  # Maze represented as a 2D numpy array
-        #choose a random starting position between maze["starting_pos"]
-        #convert the position in self. maze to a "S"
-        if randomStart:
-            #There is a predifined start position with an S in the maze. Before assigning a random start position I have to convert the older one to "."
-            self.maze[self.maze == 'S'] = '.'
-            start_pos = maze["starting_pos"][np.random.randint(0, len(maze["starting_pos"]))]
-            self.maze[start_pos[0], start_pos[1]] = 'S'
+        self.starting_positions = maze["starting_pos"] #list of possible starting positions
 
         self.start_pos = (np.concatenate(np.where(self.maze == 'S'))).astype(np.int32)  # Starting position
         self.goal_pos = (np.concatenate(np.where(self.maze == 'G'))).astype(np.int32)  # Goal position
@@ -180,6 +167,15 @@ class CSVGeneratorEnv(gym.Env):
             elif self.num_rows == 14:
                 self.cell_size = 25
             self.screen = pygame.display.set_mode((self.num_cols * self.cell_size, self.num_rows * self.cell_size))
+
+    def randomize_start_pos(self):
+        # Aqui realmente con guardar las coordenadas en una variable ya valdria, pero pinto la "S" en el mapa para poder visualizarlo más tarde
+        # There is a predifined start position with an S in the maze. Before assigning a random start position I have to convert the older one to "."
+        
+        self.maze[self.maze == 'S'] = '.'
+        start_pos = self.starting_positions[np.random.randint(0, len(self.starting_positions))]
+        self.maze[start_pos[0], start_pos[1]] = 'S'
+        self.start_pos = (np.concatenate(np.where(self.maze == 'S'))).astype(np.int32)
 
     def _is_valid_position(self, pos):
         row, col = pos

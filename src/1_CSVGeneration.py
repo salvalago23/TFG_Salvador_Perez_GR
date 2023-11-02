@@ -6,7 +6,6 @@ writing_enabled = False
 num_executions = 1000
 
 shape = "14x14"
-randomStart = True
 render = True
 
 if shape == "5x5":
@@ -15,13 +14,14 @@ elif shape == "14x14":
     csv_name  = "history14x14"
 
 
-env = createCSVEnv(shape, randomStart=randomStart, render=render)
+env = createCSVEnv(shape, render=render)
 
 with open(f"../data/csv/" + csv_name + ".csv", 'a') as f:
     if first_write and writing_enabled:
         f.write(f"step,y,x,action,next_y,next_x,reward,done\n")
     
     for i in range(num_executions):
+        env.unwrapped.randomize_start_pos()
         obs, _ = env.reset()
         if render: env.render()
 
