@@ -71,8 +71,7 @@ class QLearningAgent:
 
             self.epsilon = max(self.final_epsilon, self.epsilon - self.epsilon_decay)
 
-    def plot_results(self, rolling_length = 1):
-
+    def plot_results(self, rolling_length = 3):
         fig, axs = plt.subplots(ncols=3, figsize=(12, 5))
         axs[0].set_title("Episode rewards")
         # compute and assign a rolling average of the data to provide a smoother graph

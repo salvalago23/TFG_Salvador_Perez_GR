@@ -52,12 +52,12 @@ def createNNEnv(shape, render=False):
 
     if shape == "5x5":
         maze = mazes["5x5"]
-        grid_model_path = '../data/models/modelo_entorno5x5.pt'
-        reward_model_path = '../data/models/modelo_reward5x5.pt'
+        grid_model_path = '../data/grid&reward_models/modelo_entorno5x5.pt'
+        reward_model_path = '../data/grid&reward_models/modelo_reward5x5.pt'
     elif shape == "14x14":
         maze = mazes["14x14"]
-        grid_model_path = '../data/models/modelo_entorno14x14.pt'
-        reward_model_path = '../data/models/modelo_reward14x14.pt'
+        grid_model_path = '../data/grid&reward_models/modelo_entorno14x14.pt'
+        reward_model_path = '../data/grid&reward_models/modelo_reward14x14.pt'
 
     # Create the environment
     env = gym.make('gridNN-v0', maze=maze, grid_model_path=grid_model_path, reward_model_path=reward_model_path, render=render)#, disable_env_checker=disable_env_checker, max_episode_steps=500)
