@@ -88,6 +88,11 @@ def plot_trajectory(string_policy_grid, start_pos):
 
     while True:
         y, x = current_pos
+
+        # Check if the position is outside the grid
+        if not (0 <= y < map_data.shape[0] and 0 <= x < map_data.shape[1]):
+            break
+
         char = map_data[y, x]
 
         # Check if the character indicates the goal or a wall
@@ -109,10 +114,6 @@ def plot_trajectory(string_policy_grid, start_pos):
 
         # Move to the next position
         current_pos = next_pos
-
-        # Check if the position is outside the grid
-        if not (0 <= y < map_data.shape[0] and 0 <= x < map_data.shape[1]):
-            break
 
     # Convert the trajectory points into lists of x and y coordinates
     trajectory = np.array(trajectory)

@@ -87,18 +87,17 @@ class DQNAgent():
     
         # Replay memory 
         self.memory = ReplayBuffer(env.action_space.n, self.buffer_size, self.batch_size, seed)
-        # Initialize time step (for updating every UPDATE_EVERY steps)
+        # Initialize time step (for updating every self.update_every steps)
         self.t_step = 0
         
     def step(self, state, action, reward, next_step, done):
         # Save experience in replay memory
         self.memory.add(state, action, reward, next_step, done)
 
-        # Learn every UPDATE_EVERY time steps.
+        # Learn every self.update_every time steps.
         self.t_step = (self.t_step+1) % self.update_every
         if self.t_step == 0:
             # If enough samples are available in memory, get radom subset and learn
-
             if len(self.memory)>self.batch_size:
                 experience = self.memory.sample()
                 self.learn(experience, self.gamma)
