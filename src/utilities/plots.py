@@ -83,18 +83,20 @@ def plot_trajectory(string_policy_grid, start_pos):
             ax.text(j, i, char, ha='center', va='center', color='black', fontsize=12)
 
     # Initialize the trajectory with the starting position
-    trajectory = [start_pos.tolist()]
+    trajectory = []
     current_pos = start_pos
 
     while True:
-        y, x = current_pos
 
-        # Check if the position is outside the grid
+        y, x = current_pos
+        # Check if the current position is outside the map
         if not (0 <= y < map_data.shape[0] and 0 <= x < map_data.shape[1]):
             break
 
-        char = map_data[y, x]
+        # Append the next position to the trajectory
+        trajectory.append(current_pos.tolist())
 
+        char = map_data[y, x]
         # Check if the character indicates the goal or a wall
         if char == "G" or char == "X":
             break
@@ -108,9 +110,6 @@ def plot_trajectory(string_policy_grid, start_pos):
             next_pos = np.array([y, x + 1])
         elif char == "←":
             next_pos = np.array([y, x - 1])
-
-        # Append the next position to the trajectory
-        trajectory.append(next_pos.tolist())
 
         # Move to the next position
         current_pos = next_pos
@@ -129,6 +128,8 @@ def plot_trajectory(string_policy_grid, start_pos):
         Patch(facecolor="blue", edgecolor="black", label="Left"),
         Patch(facecolor="lightgreen", edgecolor="black", label="Right"),
         Patch(facecolor="green", edgecolor="black", label="Goal"),
+        Patch(facecolor="black", edgecolor="black", label="Wall"),
+        Patch(facecolor="purple", edgecolor="black", label="Path"),
     ]
     ax.legend(handles=legend_elements, bbox_to_anchor=(1.3, 1))
 
