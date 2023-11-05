@@ -1,11 +1,9 @@
 import matplotlib.pyplot as plt
-import numpy as np
-import torch
 
 from classes.DQNagentClass import DQNAgent, DDQNAgent
 from envs.createEnvs import createNNEnv
-from utilities.plots import create_grids, plot_trajectory
-from utilities.jsonRW import writeJSON, readJSON
+from utilities.plots import create_grids
+from utilities.jsonRW import writeJSON
 
 #CREATING THE ENVIRONMENT
 shape = "14x14"             # "5x5" or "14x14"
@@ -17,8 +15,8 @@ show_stats = False       # show stats
 export_to_JSON = True   # write JSON file
 render = False           # render the results after training
 
-NUM_DQN_AGENTS = 10     # number of DQN agents
-NUM_DDQN_AGENTS = 10     # number of DDQN agents
+NUM_DQN_AGENTS = 30     # number of DQN agents
+NUM_DDQN_AGENTS = 30     # number of DDQN agents
 
 SEED = 0                # random seed. 0 for all
 NUM_NEURONS_FC1 = 128   # number of neurons for the first fully connected layer
@@ -27,8 +25,8 @@ NUM_NEURONS_FC2 = 128   # number of neurons for the second fully connected layer
 #EPISODES_PER_AGENT = 1000
 #MAX_STEPS_PER_EPISODE = 25
 
-episodes = [1000,2000,3000]
-steps = [50,100,150]
+episodes = [3000]
+steps = [100,150]
 
 EPS_START = 1.0         # epsilon start value
 EPS_END = 0.01          # epsilon end value
@@ -92,4 +90,3 @@ for n_episode in episodes:
                         algorithm = "DDQN"
 
                     writeJSON(algorithm, EPISODES_PER_AGENT, MAX_STEPS_PER_EPISODE, shape, starting_positions[i], value_grid, policy_grid, string_policy_grid)
-                

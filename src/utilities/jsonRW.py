@@ -5,13 +5,14 @@ from utilities.plots import plot_trajectory
 import matplotlib.pyplot as plt
 
 def get_json_file_path(algorithm, shape):
-    
+    json_file_path = "../data/agent_models/json/agents_data_"
+
     if algorithm == "Q-Learning":
-        json_file_path = "../data/agent_models/json/agents_data_QLearning"
+        json_file_path += "QLearning"
     elif algorithm == "DQN":
-        json_file_path = "../data/agent_models/json/agents_data_DQN"
+        json_file_path += "DQN"
     elif algorithm == "DDQN":
-        json_file_path = "../data/agent_models/json/agents_data_DDQN"
+        json_file_path += "DDQN"
 
     if shape == "5x5":
         json_file_path += "_5x5.json"
@@ -22,7 +23,6 @@ def get_json_file_path(algorithm, shape):
 
 
 def writeJSON(algorithm, episodes, steps, shape, start_pos, value_grid, policy_grid, string_policy_grid):
-
     json_file_path = get_json_file_path(algorithm, shape)
 
     starting_position_list = start_pos.tolist()
@@ -68,7 +68,6 @@ def writeJSON(algorithm, episodes, steps, shape, start_pos, value_grid, policy_g
         json.dump(existing_data, json_file, indent=4)
 
 def readJSON(algorithm, shape):
-
     json_file_path = get_json_file_path(algorithm, shape)
 
     # Load and parse the JSON data
@@ -93,8 +92,84 @@ def readJSON(algorithm, shape):
         fig.suptitle(f'Agent {id} - {algorithm}  Start pos: {starting_position}  Episodes: {episodes}  Max steps: {max_steps}')
         plt.show()
 
-def delete_agent_data_by_id(algorithm, shape, agent_id):
+def readJSONById(algorithm, shape, agent_id):
+    json_file_path = get_json_file_path(algorithm, shape)
 
+    # Load and parse the JSON data
+    with open(json_file_path, "r") as json_file:
+        agent_data = json.load(json_file)
+
+    # Find the agent entry with the specified ID
+    agent_entry = None
+    for entry in agent_data.get("agents_data", []):
+        if entry["id"] == agent_id:
+            agent_entry = entry
+            break
+
+    if agent_entry is None:
+        print(f"Error: Agent with ID {agent_id} not found in the JSON data.")
+        return
+
+    id = agent_entry["id"]
+    algorithm = agent_entry["algorithm"]
+    shape = agent_entry["shape"]
+    episodes = agent_entry["episodes"]
+    max_steps = agent_entry["max_steps"]
+    starting_position = np.array(agent_entry["starting_position"])
+    string_policy_grid = np.array(agent_entry["string_policy_grid"])
+    value_grid = np.array(agent_entry["value_grid"])
+    policy_grid = np.array(agent_entry["policy_grid"])
+
+    # Print agent information
+    print(f'Agent {id} info --> Algorithm: {algorithm}   Shape: {shape}   Episodes: {episodes}   Max steps: {max_steps}')
+
+    # Plot the trajectory for the specified agent
+    fig = plot_trajectory(string_policy_grid, starting_position)
+    fig.suptitle(f'Agent {id} - {algorithm}  Start pos: {starting_position}  Episodes: {episodes}  Max steps: {max_steps}')
+    plt.show()
+
+
+def display_agent_data(algorithm, shape, page_number, items_per_page=10):
+    try:
+        json_file_path = get_json_file_path(algorithm, shape)
+
+        # Load and parse the existing JSON data
+        with open(json_file_path, "r") as json_file:
+            data = json.load(json_file)
+
+        if "agents_data" in data:
+            agent_data = data["agents_data"]
+            total_entries = len(agent_data)
+
+            start_idx = (page_number - 1) * items_per_page
+            end_idx = min(page_number * items_per_page, total_entries)
+
+            if start_idx < total_entries:
+                print(f"Displaying entries {start_idx + 1} to {end_idx} (out of {total_entries}):")
+                for entry in agent_data[start_idx:end_idx]:
+                    starting_position = np.array(entry["starting_position"])
+                    string_policy_grid = np.array(entry["string_policy_grid"])
+                    id = entry["id"]
+                    algorithm = entry.get("algorithm", "Unknown")
+                    episodes = entry.get("episodes", "Unknown")
+                    max_steps = entry.get("max_steps", "Unknown")
+
+                    fig = plot_trajectory(string_policy_grid, starting_position)
+                    fig.suptitle(f'Agent {id} - {algorithm}  Start pos: {starting_position}  Episodes: {episodes}  Max steps: {max_steps}')
+                    plt.show()
+            else:
+                print("No more entries to display.")
+
+        else:
+            print("No agent data found in the JSON file.")
+
+    except FileNotFoundError:
+        print(f"JSON file '{json_file_path}' not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+def delete_agent_data_by_id(algorithm, shape, agent_id):
     json_file_path = get_json_file_path(algorithm, shape)
 
     try:
