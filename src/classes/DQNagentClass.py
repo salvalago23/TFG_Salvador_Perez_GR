@@ -24,7 +24,6 @@ class QNetwork(nn.Module):
             fc2_unit (int): Number of nodes in second hidden layer
         """
         super(QNetwork,self).__init__() ## calls __init__ method of nn.Module class
-        self.seed = torch.manual_seed(0)
         self.fc1= nn.Linear(state_size,fc1_unit)
         self.fc2 = nn.Linear(fc1_unit,fc2_unit)
         self.fc3 = nn.Linear(fc2_unit,action_size)
@@ -67,7 +66,6 @@ class DQNAgent():
         self.env = env
         self.state_size = env.observation_space.shape[0]
         self.action_size = env.action_space.n
-        self.seed = random.seed(0)
 
         self.n_episodes = n_episodes
         self.max_steps = max_steps
@@ -207,6 +205,8 @@ class DQNAgent():
 
 
     def plot_results(self, position, rolling_length = 3):
+        print("Agent", position+1, "steps stats:", "\tAverage", round(np.mean(self.env.length_queue), 2), "\tStd dev", round(np.std(self.env.length_queue), 2), "\tMedian", round(np.median(self.env.length_queue), 2), "\tBest", np.min(self.env.length_queue))
+
         fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
         axs[0].set_title("Episode rewards")
         axs[0].set_ylabel("Score")
@@ -215,8 +215,7 @@ class DQNAgent():
         reward_moving_average = (np.convolve(np.array(self.env.return_queue).flatten(), np.ones(rolling_length), mode="valid") / rolling_length)
         #axs[0].plot(range(len(reward_moving_average)), reward_moving_average)
         axs[0].plot(range(len(self.env.return_queue)), np.array(self.env.return_queue).flatten())
-        for return_value in self.env.return_queue:
-            print(return_value)
+
         axs[1].set_title("Episode lengths")
         axs[1].set_ylabel("Steps")
         axs[1].set_xlabel("Episode #")
@@ -281,7 +280,6 @@ class ReplayBuffer:
         self.memory = deque(maxlen=buffer_size)
         self.batch_size = batch_size
         self.experiences = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
-        self.seed = random.seed(0)
         
     def add(self,state, action, reward, next_state,done):
         """Add a new experience to memory."""
