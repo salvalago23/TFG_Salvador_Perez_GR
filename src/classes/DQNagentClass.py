@@ -215,7 +215,8 @@ class DQNAgent():
         reward_moving_average = (np.convolve(np.array(self.env.return_queue).flatten(), np.ones(rolling_length), mode="valid") / rolling_length)
         #axs[0].plot(range(len(reward_moving_average)), reward_moving_average)
         axs[0].plot(range(len(self.env.return_queue)), np.array(self.env.return_queue).flatten())
-
+        for return_value in self.env.return_queue:
+            print(return_value)
         axs[1].set_title("Episode lengths")
         axs[1].set_ylabel("Steps")
         axs[1].set_xlabel("Episode #")
