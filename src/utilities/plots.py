@@ -61,7 +61,7 @@ def create_grids(env, agent=None, Qnet=None):
     return value_grid, policy_grid, string_policy_grid
 
 
-def plot_trajectory(string_policy_grid, start_pos):
+def plot_trajectory(string_policy_grid, start_pos, position):
     map_data = np.array(string_policy_grid)
     
     colors = ['red', 'black', 'lightgreen', 'green', 'gray', 'blue']
@@ -133,4 +133,5 @@ def plot_trajectory(string_policy_grid, start_pos):
     ]
     ax.legend(handles=legend_elements, bbox_to_anchor=(1.3, 1))
 
-    return fig
+    fig.suptitle(f'Agent {position+1} - Policy   Starting position: {start_pos}')
+    plt.show()

@@ -18,7 +18,6 @@ render = False           # render the results after training
 NUM_DQN_AGENTS = 30     # number of DQN agents
 NUM_DDQN_AGENTS = 30     # number of DDQN agents
 
-SEED = 0                # random seed. 0 for all
 NUM_NEURONS_FC1 = 128   # number of neurons for the first fully connected layer
 NUM_NEURONS_FC2 = 128   # number of neurons for the second fully connected layer
 
@@ -54,12 +53,12 @@ for n_episode in episodes:
 
         for i in range(NUM_DQN_AGENTS):
             path_to_save = "../data/agent_models/pytorch/DQNagent"+str(i+1)+".pt" # path to save the model
-            agent = DQNAgent(path_to_save, env, SEED, NUM_NEURONS_FC1, NUM_NEURONS_FC2, EPISODES_PER_AGENT, MAX_STEPS_PER_EPISODE, EPS_START, EPS_END, EPS_DECAY, BUFFER_SIZE, BATCH_SIZE, GAMMA, TAU, LR, UPDATE_EVERY)
+            agent = DQNAgent(path_to_save, env, NUM_NEURONS_FC1, NUM_NEURONS_FC2, EPISODES_PER_AGENT, MAX_STEPS_PER_EPISODE, EPS_START, EPS_END, EPS_DECAY, BUFFER_SIZE, BATCH_SIZE, GAMMA, TAU, LR, UPDATE_EVERY)
             agents_arr.append(agent) # append the agent to the array
 
         for i in range(NUM_DDQN_AGENTS):
             path_to_save = "../data/agent_models/pytorch/DDQNagent"+str(i+1)+".pt" # path to save the model
-            agent = DDQNAgent(path_to_save, env, SEED, NUM_NEURONS_FC1, NUM_NEURONS_FC2, EPISODES_PER_AGENT, MAX_STEPS_PER_EPISODE, EPS_START, EPS_END, EPS_DECAY, BUFFER_SIZE, BATCH_SIZE, GAMMA, TAU, LR, UPDATE_EVERY)
+            agent = DDQNAgent(path_to_save, env, NUM_NEURONS_FC1, NUM_NEURONS_FC2, EPISODES_PER_AGENT, MAX_STEPS_PER_EPISODE, EPS_START, EPS_END, EPS_DECAY, BUFFER_SIZE, BATCH_SIZE, GAMMA, TAU, LR, UPDATE_EVERY)
             agents_arr.append(agent) # append the agent to the array
 
 

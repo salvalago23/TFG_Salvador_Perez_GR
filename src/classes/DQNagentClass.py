@@ -1,7 +1,10 @@
 import numpy as np
 import random
+import gymnasium as gym
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 from collections import namedtuple, deque 
+
 
 import torch
 import torch.nn as nn
@@ -10,25 +13,23 @@ import torch.optim as optim
 
 class QNetwork(nn.Module):
     """ Actor (Policy) Model."""
-    def __init__(self, state_size, action_size, seed, fc1_unit, fc2_unit):
+    def __init__(self, state_size, action_size, fc1_unit, fc2_unit):
         """
         Initialize parameters and build model.
         Params
         =======
             state_size (int): Dimension of each state
             action_size (int): Dimension of each action
-            seed (int): Random seed
             fc1_unit (int): Number of nodes in first hidden layer
             fc2_unit (int): Number of nodes in second hidden layer
         """
         super(QNetwork,self).__init__() ## calls __init__ method of nn.Module class
-        self.seed = torch.manual_seed(seed)
+        self.seed = torch.manual_seed(0)
         self.fc1= nn.Linear(state_size,fc1_unit)
         self.fc2 = nn.Linear(fc1_unit,fc2_unit)
         self.fc3 = nn.Linear(fc2_unit,action_size)
         
     def forward(self,x):
-        # x = state
         """
         Build a network that maps state -> action values.
         """
@@ -41,13 +42,12 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class DQNAgent():
     """Interacts with and learns form environment."""
-    def __init__(self, path_to_save, env, seed, fc1_unit, fc2_unit, n_episodes, max_steps, initial_eps, final_eps, eps_decay, buffer_size, batch_size, gamma, tau, lr, update_every):
+    def __init__(self, path_to_save, env, fc1_unit, fc2_unit, n_episodes, max_steps, initial_eps, final_eps, eps_decay, buffer_size, batch_size, gamma, tau, lr, update_every):
         """Initialize an Agent object.
         Params
         =======
             path_to_save (str): path to save the model weights
             env (gym environment): environment to interact with
-            seed (int): random seed
             fc1_unit (int): number of nodes in first hidden layer
             fc2_unit (int): number of nodes in second hidden layer
             n_episodes (int): maximum number of training episodes
@@ -67,12 +67,15 @@ class DQNAgent():
         self.env = env
         self.state_size = env.observation_space.shape[0]
         self.action_size = env.action_space.n
-        self.seed = random.seed(seed)
+        self.seed = random.seed(0)
+
         self.n_episodes = n_episodes
         self.max_steps = max_steps
-        self.eps_start = initial_eps
-        self.eps_end = final_eps
-        self.eps_decay = eps_decay
+
+        self.epsilon = initial_eps
+        self.final_epsilon = final_eps
+        self.epsilon_decay = eps_decay
+
         self.buffer_size = buffer_size
         self.batch_size = batch_size
         self.gamma = gamma
@@ -80,13 +83,13 @@ class DQNAgent():
         self.update_every = update_every
 
         #Q- Network
-        self.qnetwork_local = QNetwork(env.observation_space.shape[0], env.action_space.n, seed, fc1_unit, fc2_unit).to(device)
-        self.qnetwork_target = QNetwork(env.observation_space.shape[0], env.action_space.n, seed, fc1_unit, fc2_unit).to(device)
+        self.qnetwork_local = QNetwork(env.observation_space.shape[0], env.action_space.n, fc1_unit, fc2_unit).to(device)
+        self.qnetwork_target = QNetwork(env.observation_space.shape[0], env.action_space.n, fc1_unit, fc2_unit).to(device)
         
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(),lr=lr)
     
         # Replay memory 
-        self.memory = ReplayBuffer(env.action_space.n, self.buffer_size, self.batch_size, seed)
+        self.memory = ReplayBuffer(env.action_space.n, self.buffer_size, self.batch_size)
         # Initialize time step (for updating every self.update_every steps)
         self.t_step = 0
         
@@ -102,12 +105,11 @@ class DQNAgent():
                 experience = self.memory.sample()
                 self.learn(experience, self.gamma)
 
-    def act(self, state, eps = 0):
+    def get_action(self, state):
         """Returns action for given state as per current policy
         Params
         =======
             state (array_like): current state
-            eps (float): epsilon, for epsilon-greedy action selection
         """
         state = torch.from_numpy(state).float().unsqueeze(0).to(device)
         self.qnetwork_local.eval()
@@ -116,7 +118,7 @@ class DQNAgent():
         self.qnetwork_local.train()
 
         #Epsilon -greedy action selction
-        if random.random() > eps:
+        if random.random() > self.epsilon:
             #print("Action values: ",action_values.cpu().data.numpy())
             return np.argmax(action_values.cpu().data.numpy())
         else:
@@ -179,37 +181,49 @@ class DQNAgent():
             eps_end (float): minimum value of epsilon 
             eps_decay (float): mutiplicative factor (per episode) for decreasing epsilon
         """
-        scores = [] # list containing score from each episode
-        durations = [] # list containing duration of each episode
-        eps = self.eps_start
+        self.env = gym.wrappers.RecordEpisodeStatistics(self.env, deque_size=self.n_episodes)
 
-        #for i_episode in range(1, self.n_episodes+1):
         for episode in tqdm(range(self.n_episodes)):
-            state,_ = self.env.reset()
-            score = 0
+            done = False
+            state, _ = self.env.reset()
+
             for t in range(1, self.max_steps+1):
-                action = self.act(state,eps)
+                action = self.get_action(state)
                 #print("State: ", state,"Action: ",action)
-                next_state,reward,done,_,_ = self.env.step(action)
-                self.step(state,action,reward,next_state,done)
+                next_state, reward, done, _, _ = self.env.step(action)
+                self.step(state, action, reward, next_state, done)
                 ## above step decides whether we will train(learn) the network actor (local_qnetwork) or we will fill the replay buffer
                 ## if len replay buffer is equal to the batch size then we will train the network or otherwise we will add experience tuple in our replay buffer.
                 state = next_state
-                score += reward
 
-                if done or t == self.max_steps:
-                    #print('Episode: {}\tSteps: {}'.format(i_episode,t))
-                    scores.append(score)
-                    durations.append(t)
-                    break
+                if done or t == self.max_steps: break
             
-            eps = max(eps*self.eps_decay,self.eps_end)## decrease the epsilon
+            self.epsilon = max(self.final_epsilon, self.epsilon*self.epsilon_decay)## decrease the epsilon
+
+            #eps = max(self.eps_end, eps-self.eps_decay)
 
         # save the model weights
         torch.save(self.qnetwork_local.state_dict(), self.path_to_save)
 
-        return scores, durations
 
+    def plot_results(self, position, rolling_length = 3):
+        fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
+        axs[0].set_title("Episode rewards")
+        axs[0].set_ylabel("Score")
+        axs[0].set_xlabel("Episode #")
+        # compute and assign a rolling average of the data to provide a smoother graph
+        reward_moving_average = (np.convolve(np.array(self.env.return_queue).flatten(), np.ones(rolling_length), mode="valid") / rolling_length)
+        #axs[0].plot(range(len(reward_moving_average)), reward_moving_average)
+        axs[0].plot(range(len(self.env.return_queue)), np.array(self.env.return_queue).flatten())
+
+        axs[1].set_title("Episode lengths")
+        axs[1].set_ylabel("Steps")
+        axs[1].set_xlabel("Episode #")
+        length_moving_average = (np.convolve(np.array(self.env.length_queue).flatten(), np.ones(rolling_length), mode="valid") / rolling_length)
+        axs[1].plot(range(len(length_moving_average)), length_moving_average)
+
+        fig.suptitle(f'Agent {position+1} - Stats')
+        plt.show()
 
 class DDQNAgent(DQNAgent):
     """Interacts with and learns form environment."""
@@ -252,7 +266,7 @@ class DDQNAgent(DQNAgent):
 class ReplayBuffer:
     """Fixed -size buffe to store experience tuples."""
     
-    def __init__(self, action_size, buffer_size, batch_size, seed):
+    def __init__(self, action_size, buffer_size, batch_size):
         """Initialize a ReplayBuffer object.
         
         Params
@@ -260,14 +274,13 @@ class ReplayBuffer:
             action_size (int): dimension of each action
             buffer_size (int): maximum size of buffer
             batch_size (int): size of each training batch
-            seed (int): random seed
         """
         
         self.action_size = action_size
         self.memory = deque(maxlen=buffer_size)
         self.batch_size = batch_size
         self.experiences = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
-        self.seed = random.seed(seed)
+        self.seed = random.seed(0)
         
     def add(self,state, action, reward, next_state,done):
         """Add a new experience to memory."""
