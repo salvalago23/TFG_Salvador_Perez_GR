@@ -5,11 +5,12 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from collections import namedtuple, deque 
 
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+
+from envs.createEnvs import createNNEnv
 
 class QNetwork(nn.Module):
     """ Actor (Policy) Model."""
@@ -41,16 +42,17 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class DQNAgent():
     """Interacts with and learns form environment."""
-    def __init__(self, path_to_save, env, fc1_unit, fc2_unit, n_episodes, max_steps, initial_eps, final_eps, eps_decay, buffer_size, batch_size, gamma, tau, lr, update_every):
+    def __init__(self, id, path_to_save, shape, fc1_unit, fc2_unit, n_episodes, max_steps, initial_eps, final_eps, eps_decay, buffer_size, batch_size, gamma, tau, lr, update_every):
         """Initialize an Agent object.
         Params
         =======
+            id (int): id of the agent
             path_to_save (str): path to save the model weights
             env (gym environment): environment to interact with
             fc1_unit (int): number of nodes in first hidden layer
             fc2_unit (int): number of nodes in second hidden layer
             n_episodes (int): maximum number of training episodes
-            max_steps (int): maximum number of timesteps per episode
+            max_steps (int): maximum number of steps per episode
             initial_eps (float): starting value of epsilon, for epsilon-greedy action selection
             final_eps (float): minimum value of epsilon
             eps_decay (float): multiplicative factor (per episode) for decreasing epsilon
@@ -61,14 +63,15 @@ class DQNAgent():
             lr (float): learning rate
             update_every (int): how often to update the network
         """
-
+        self.id = id
         self.path_to_save = path_to_save
-        self.env = env
-        self.state_size = env.observation_space.shape[0]
-        self.action_size = env.action_space.n
+
+        self.env = createNNEnv(shape, id=id, max_steps=max_steps)
+        self.env.unwrapped.randomize_start_pos()
+        self.state_size = self.env.observation_space.shape[0]
+        self.action_size = self.env.action_space.n
 
         self.n_episodes = n_episodes
-        self.max_steps = max_steps
 
         self.epsilon = initial_eps
         self.final_epsilon = final_eps
@@ -81,13 +84,13 @@ class DQNAgent():
         self.update_every = update_every
 
         #Q- Network
-        self.qnetwork_local = QNetwork(env.observation_space.shape[0], env.action_space.n, fc1_unit, fc2_unit).to(device)
-        self.qnetwork_target = QNetwork(env.observation_space.shape[0], env.action_space.n, fc1_unit, fc2_unit).to(device)
+        self.qnetwork_local = QNetwork(self.env.observation_space.shape[0], self.env.action_space.n, fc1_unit, fc2_unit).to(device)
+        self.qnetwork_target = QNetwork(self.env.observation_space.shape[0], self.env.action_space.n, fc1_unit, fc2_unit).to(device)
         
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(),lr=lr)
     
         # Replay memory 
-        self.memory = ReplayBuffer(env.action_space.n, self.buffer_size, self.batch_size)
+        self.memory = ReplayBuffer(self.env.action_space.n, self.buffer_size, self.batch_size)
         # Initialize time step (for updating every self.update_every steps)
         self.t_step = 0
         
@@ -174,7 +177,6 @@ class DQNAgent():
         Params
         ======
             n_episodes (int): maximum number of training epsiodes
-            max_steps (int): maximum number of timesteps per episode
             eps_start (float): starting value of epsilon, for epsilon-greedy action selection
             eps_end (float): minimum value of epsilon 
             eps_decay (float): mutiplicative factor (per episode) for decreasing epsilon
@@ -185,16 +187,15 @@ class DQNAgent():
             done = False
             state, _ = self.env.reset()
 
-            for t in range(1, self.max_steps+1):
+            while not done:
                 action = self.get_action(state)
                 #print("State: ", state,"Action: ",action)
-                next_state, reward, done, _, _ = self.env.step(action)
+                next_state, reward, terminated, truncated, _ = self.env.step(action)
+                done = truncated or terminated
                 self.step(state, action, reward, next_state, done)
                 ## above step decides whether we will train(learn) the network actor (local_qnetwork) or we will fill the replay buffer
                 ## if len replay buffer is equal to the batch size then we will train the network or otherwise we will add experience tuple in our replay buffer.
                 state = next_state
-
-                if done or t == self.max_steps: break
             
             self.epsilon = max(self.final_epsilon, self.epsilon*self.epsilon_decay)## decrease the epsilon
 
@@ -204,15 +205,15 @@ class DQNAgent():
         torch.save(self.qnetwork_local.state_dict(), self.path_to_save)
 
 
-    def plot_results(self, position, rolling_length = 3):
-        print("Agent", position+1, "steps stats:", "\tAverage", round(np.mean(self.env.length_queue), 2), "\tStd dev", round(np.std(self.env.length_queue), 2), "\tMedian", round(np.median(self.env.length_queue), 2), "\tBest", np.min(self.env.length_queue))
+    def plot_results(self, rolling_length = 3):
+        print("Agent", self.id+1, "steps stats:", "\tAverage:", round(np.mean(self.env.length_queue), 2), "\tStd dev:", round(np.std(self.env.length_queue), 2), "\tMedian:", np.median(self.env.length_queue), "\tBest:", np.min(self.env.length_queue))
 
         fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
         axs[0].set_title("Episode rewards")
         axs[0].set_ylabel("Score")
         axs[0].set_xlabel("Episode #")
         # compute and assign a rolling average of the data to provide a smoother graph
-        reward_moving_average = (np.convolve(np.array(self.env.return_queue).flatten(), np.ones(rolling_length), mode="valid") / rolling_length)
+        #reward_moving_average = (np.convolve(np.array(self.env.return_queue).flatten(), np.ones(rolling_length), mode="valid") / rolling_length)
         #axs[0].plot(range(len(reward_moving_average)), reward_moving_average)
         axs[0].plot(range(len(self.env.return_queue)), np.array(self.env.return_queue).flatten())
 
@@ -222,7 +223,7 @@ class DQNAgent():
         length_moving_average = (np.convolve(np.array(self.env.length_queue).flatten(), np.ones(rolling_length), mode="valid") / rolling_length)
         axs[1].plot(range(len(length_moving_average)), length_moving_average)
 
-        fig.suptitle(f'Agent {position+1} - Stats')
+        fig.suptitle(f'Agent {self.id+1} - Stats')
         plt.show()
 
 class DDQNAgent(DQNAgent):

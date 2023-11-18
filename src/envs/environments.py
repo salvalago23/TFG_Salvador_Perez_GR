@@ -33,10 +33,13 @@ class NeuralNetwork(nn.Module):
 
 
 class NNGridWorldEnv(gym.Env):
-    def __init__(self, maze, grid_model_path, reward_model_path, render):
+    def __init__(self, maze, grid_model_path, reward_model_path, render, max_steps_per_episode):
         self.maze = np.array(maze["maze"])  # Maze represented as a 2D numpy array
         self.starting_positions = maze["starting_pos"] #list of possible starting positions
         
+        self.max_steps_per_episode = max_steps_per_episode
+        self.step_count = 0
+
         self.start_pos = (np.concatenate(np.where(self.maze == 'S'))).astype(np.int32)  # Starting position
         self.goal_pos = (np.concatenate(np.where(self.maze == 'G'))).astype(np.int32)  # Goal position
         self.num_rows, self.num_cols = self.maze.shape
@@ -45,7 +48,7 @@ class NNGridWorldEnv(gym.Env):
         self.action_space = spaces.Discrete(4)
 
         # Load models
-        print("Loading models...")
+        #print("Loading models...")
         if self.num_rows == 5:
             self.grid_model = NeuralNetwork(3, 2)
             self.reward_model = NeuralNetwork(3, 1)
@@ -57,7 +60,7 @@ class NNGridWorldEnv(gym.Env):
         self.reward_model.load_state_dict(torch.load(reward_model_path))
         self.grid_model.eval()
         self.reward_model.eval()
-        print("Models loaded")
+        #print("Models loaded")
 
         if render:
         # Initialize Pygame
@@ -87,10 +90,13 @@ class NNGridWorldEnv(gym.Env):
     def reset(self, seed=None, options=None):
         self._agent_location = self.start_pos 
         self._target_location = self.goal_pos
+        self.step_count = 0
 
         return self._agent_location, {}
     
     def step(self, action):
+        self.step_count += 1
+
         #No me queda muy claro pq tiene que ser un [[[]]] y si es necesario, pero si no tiene esta forma el modelo de torch protesta
         #pq podria ser mas lento
         model_input = np.array([np.column_stack(np.array([float(self._agent_location[0]), float(self._agent_location[1]), float(action)]))])
@@ -106,8 +112,12 @@ class NNGridWorldEnv(gym.Env):
 
         # An episode is done if the agent has reached the target
         terminated = np.array_equal(self._agent_location, self._target_location)        
+        
+        # An episode is truncated if the agent has reached the maximum number of steps
+        #do it with ternal operator
+        truncated = True if self.step_count == self.max_steps_per_episode else False
 
-        return self._agent_location, reward, terminated, False, {}
+        return self._agent_location, reward, terminated, truncated, {}
 
     def render(self):
         # Clear the screen

@@ -46,7 +46,7 @@ def createCSVEnv(shape, render=False):
 
     return env
 
-def createNNEnv(shape, render=False, id=0):
+def createNNEnv(shape, max_steps, render=False, id=0):
     # Register the environment
     id = 'gridNN-v' + str(id)
 
@@ -62,6 +62,6 @@ def createNNEnv(shape, render=False, id=0):
         reward_model_path = '../data/grid&reward_models/modelo_reward14x14.pt'
 
     # Create the environment
-    env = gym.make(id, maze=maze, grid_model_path=grid_model_path, reward_model_path=reward_model_path, render=render)#, disable_env_checker=disable_env_checker, max_episode_steps=500)
+    env = gym.make(id, maze=maze, grid_model_path=grid_model_path, reward_model_path=reward_model_path, render=render, max_steps_per_episode=max_steps)
 
     return env
