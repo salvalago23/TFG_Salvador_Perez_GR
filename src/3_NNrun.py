@@ -16,7 +16,7 @@ elif shape == "14x14":
     csv_name  = "historyNN14x14"
 
 
-env = createNNEnv(shape, render=render)
+env = createNNEnv(shape, render)
 
 with open(f"../data/csv/" + csv_name + ".csv", 'a') as f:
     if first_write and writing_enabled:

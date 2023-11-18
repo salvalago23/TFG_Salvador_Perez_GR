@@ -59,39 +59,31 @@ class QLearningAgent:
             # play one episode
             while not done:
                 action = self.get_action(obs)
-                next_obs, reward, terminated, _, _ = self.env.step(action)
+                next_obs, reward, done, _, _ = self.env.step(action)
                 next_obs = tuple(next_obs)
 
                 # update the agent
-                self.update(obs, action, reward, terminated, next_obs)
+                self.update(obs, action, reward, done, next_obs)
 
-                # update if the environment is done and the current obs
-                done = terminated
+                # update the current obs
                 obs = next_obs
 
             self.epsilon = max(self.final_epsilon, self.epsilon - self.epsilon_decay)
 
-    def plot_results(self, rolling_length = 3):
+    def plot_results(self, position, rolling_length = 3):
         fig, axs = plt.subplots(ncols=3, figsize=(12, 5))
         axs[0].set_title("Episode rewards")
         # compute and assign a rolling average of the data to provide a smoother graph
         reward_moving_average = (np.convolve(np.array(self.env.return_queue).flatten(), np.ones(rolling_length), mode="valid") / rolling_length)
         axs[0].plot(range(len(reward_moving_average)), reward_moving_average)
 
-        # Add a red line at y = 9 to the right plot
-        # Actually the value should be 8, but it depends if you consider reaching the goal as a step on its own or not
-        if self.env.unwrapped.num_rows == 5:
-            axs[1].axhline(y=9, color='red', linestyle='--', label='y=9')
-        elif self.env.unwrapped.num_rows == 14:
-            # For the 14x14 it should be around 26
-            axs[1].axhline(y=29, color='red', linestyle='--', label='y=26')
-
         axs[1].set_title("Episode lengths")
-        length_moving_average = (np.convolve(np.array(self.env.length_queue).flatten(), np.ones(rolling_length), mode="same") / rolling_length)
+        length_moving_average = (np.convolve(np.array(self.env.length_queue).flatten(), np.ones(rolling_length), mode="valid") / rolling_length)
         axs[1].plot(range(len(length_moving_average)), length_moving_average)
 
         axs[2].set_title("Training Error")
-        training_error_moving_average = (np.convolve(np.array(self.training_error), np.ones(rolling_length), mode="same") / rolling_length)
+        training_error_moving_average = (np.convolve(np.array(self.training_error), np.ones(rolling_length), mode="valid") / rolling_length)
         axs[2].plot(range(len(training_error_moving_average)), training_error_moving_average)
 
-        return fig
+        fig.suptitle(f'Agent {position+1} - Stats')
+        plt.show()

@@ -14,7 +14,7 @@ elif shape == "14x14":
     csv_name  = "history14x14"
 
 
-env = createCSVEnv(shape, render=render)
+env = createCSVEnv(shape, render)
 
 with open(f"../data/csv/" + csv_name + ".csv", 'a') as f:
     if first_write and writing_enabled:
