@@ -46,7 +46,7 @@ def createCSVEnv(shape, render=False):
 
     return env
 
-def createNNEnv(shape, max_steps, render=False, id=0):
+def createNNEnv(shape, max_steps=500, render=False, id=0):
     # Register the environment
     id = 'gridNN-v' + str(id)
 

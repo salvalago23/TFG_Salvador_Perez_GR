@@ -42,12 +42,11 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class DQNAgent():
     """Interacts with and learns form environment."""
-    def __init__(self, id, path_to_save, shape, fc1_unit, fc2_unit, n_episodes, max_steps, initial_eps, final_eps, eps_decay, buffer_size, batch_size, gamma, tau, lr, update_every):
+    def __init__(self, id, algorithm, shape, fc1_unit, fc2_unit, n_episodes, max_steps, initial_eps, final_eps, eps_decay, buffer_size, batch_size, gamma, tau, lr, update_every):
         """Initialize an Agent object.
         Params
         =======
             id (int): id of the agent
-            path_to_save (str): path to save the model weights
             env (gym environment): environment to interact with
             fc1_unit (int): number of nodes in first hidden layer
             fc2_unit (int): number of nodes in second hidden layer
@@ -64,14 +63,17 @@ class DQNAgent():
             update_every (int): how often to update the network
         """
         self.id = id
-        self.path_to_save = path_to_save
+        self.algorithm = algorithm
 
+        self.shape = shape
         self.env = createNNEnv(shape, id=id, max_steps=max_steps)
         self.env.unwrapped.randomize_start_pos()
+        
         self.state_size = self.env.observation_space.shape[0]
         self.action_size = self.env.action_space.n
 
         self.n_episodes = n_episodes
+        self.max_steps = max_steps
 
         self.epsilon = initial_eps
         self.final_epsilon = final_eps
@@ -202,19 +204,16 @@ class DQNAgent():
             #eps = max(self.eps_end, eps-self.eps_decay)
 
         # save the model weights
-        torch.save(self.qnetwork_local.state_dict(), self.path_to_save)
+        #torch.save(self.qnetwork_local.state_dict(), self.path_to_save)
 
 
-    def plot_results(self, rolling_length = 3):
+    def plot_results(self, rolling_length=1):
         print("Agent", self.id+1, "steps stats:", "\tAverage:", round(np.mean(self.env.length_queue), 2), "\tStd dev:", round(np.std(self.env.length_queue), 2), "\tMedian:", np.median(self.env.length_queue), "\tBest:", np.min(self.env.length_queue))
-
         fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
+
         axs[0].set_title("Episode rewards")
         axs[0].set_ylabel("Score")
         axs[0].set_xlabel("Episode #")
-        # compute and assign a rolling average of the data to provide a smoother graph
-        #reward_moving_average = (np.convolve(np.array(self.env.return_queue).flatten(), np.ones(rolling_length), mode="valid") / rolling_length)
-        #axs[0].plot(range(len(reward_moving_average)), reward_moving_average)
         axs[0].plot(range(len(self.env.return_queue)), np.array(self.env.return_queue).flatten())
 
         axs[1].set_title("Episode lengths")
@@ -237,7 +236,7 @@ class DDQNAgent(DQNAgent):
             gamma (float): discount factor
         """
         states, actions, rewards, next_state, dones = experiences
-        ## TODO: compute and minimize the loss
+        #Compute and minimize the loss
         criterion = torch.nn.MSELoss()
         self.qnetwork_local.train()
         self.qnetwork_target.eval()

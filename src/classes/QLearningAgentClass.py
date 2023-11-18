@@ -4,8 +4,10 @@ import numpy as np
 import gymnasium as gym
 import matplotlib.pyplot as plt
 
+from envs.createEnvs import createNNEnv
+
 class QLearningAgent:
-    def __init__(self, env, n_episodes, learning_rate, start_epsilon, epsilon_decay, final_epsilon, discount_factor):
+    def __init__(self, id, shape, n_episodes, max_steps, learning_rate, start_epsilon, epsilon_decay, final_epsilon, discount_factor):
         """Initialize a Reinforcement Learning agent with an empty dictionary
         of state-action values (q_values), a learning rate and an epsilon.
         Args:
@@ -15,10 +17,18 @@ class QLearningAgent:
             final_epsilon: The final epsilon value
             discount_factor: The discount factor for computing the Q-value
         """
-        self.env = env
+        self.id = id
+        self.algorithm = "Q-Learning"
+
+        self.shape = shape
+        self.env = createNNEnv(shape, id=id, max_steps=max_steps)
+        self.env.unwrapped.randomize_start_pos()
+
         self.q_values = defaultdict(lambda: np.zeros(self.env.action_space.n))
 
         self.n_episodes = n_episodes
+        self.max_steps = max_steps
+
         self.lr = learning_rate
         self.discount_factor = discount_factor
 
@@ -59,31 +69,34 @@ class QLearningAgent:
             # play one episode
             while not done:
                 action = self.get_action(obs)
-                next_obs, reward, done, _, _ = self.env.step(action)
+                next_obs, reward, terminated, truncated, _ = self.env.step(action)
+                done = truncated or terminated
                 next_obs = tuple(next_obs)
-
                 # update the agent
                 self.update(obs, action, reward, done, next_obs)
-
-                # update the current obs
                 obs = next_obs
 
             self.epsilon = max(self.final_epsilon, self.epsilon - self.epsilon_decay)
 
-    def plot_results(self, position, rolling_length = 3):
+    def plot_results(self, rolling_length = 3):
         fig, axs = plt.subplots(ncols=3, figsize=(12, 5))
         axs[0].set_title("Episode rewards")
-        # compute and assign a rolling average of the data to provide a smoother graph
-        reward_moving_average = (np.convolve(np.array(self.env.return_queue).flatten(), np.ones(rolling_length), mode="valid") / rolling_length)
-        axs[0].plot(range(len(reward_moving_average)), reward_moving_average)
+        axs[0].set_ylabel("Score")
+        axs[0].set_xlabel("Episode #")
+        axs[0].plot(range(len(self.env.return_queue)), np.array(self.env.return_queue).flatten())
 
         axs[1].set_title("Episode lengths")
+        axs[1].set_ylabel("Steps")
+        axs[1].set_xlabel("Episode #")
+        # compute and assign a rolling average of the data to provide a smoother graph
         length_moving_average = (np.convolve(np.array(self.env.length_queue).flatten(), np.ones(rolling_length), mode="valid") / rolling_length)
         axs[1].plot(range(len(length_moving_average)), length_moving_average)
 
         axs[2].set_title("Training Error")
+        axs[2].set_ylabel("Value")
+        axs[2].set_xlabel("Temporal difference #")
         training_error_moving_average = (np.convolve(np.array(self.training_error), np.ones(rolling_length), mode="valid") / rolling_length)
         axs[2].plot(range(len(training_error_moving_average)), training_error_moving_average)
 
-        fig.suptitle(f'Agent {position+1} - Stats')
+        fig.suptitle(f'Agent {self.id+1} - Stats')
         plt.show()
