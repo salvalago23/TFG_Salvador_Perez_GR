@@ -88,7 +88,7 @@ def readJSON(algorithm, shape):
 
         #print(f'Agent {id} info --> Algorithm: {algorithm}   Shape: {shape}   Episodes: {episodes}   Max steps: {max_steps}')
 
-        fig = plot_trajectory(string_policy_grid, starting_position)
+        fig = plot_trajectory(string_policy_grid, starting_position, id, return_fig=True)
         fig.suptitle(f'Agent {id} - {algorithm}  Start pos: {starting_position}  Episodes: {episodes}  Max steps: {max_steps}')
         plt.show()
 
@@ -124,7 +124,7 @@ def readJSONById(algorithm, shape, agent_id):
     print(f'Agent {id} info --> Algorithm: {algorithm}   Shape: {shape}   Episodes: {episodes}   Max steps: {max_steps}')
 
     # Plot the trajectory for the specified agent
-    fig = plot_trajectory(string_policy_grid, starting_position)
+    fig = plot_trajectory(string_policy_grid, starting_position, id, return_fig=True)
     fig.suptitle(f'Agent {id} - {algorithm}  Start pos: {starting_position}  Episodes: {episodes}  Max steps: {max_steps}')
     plt.show()
 
@@ -154,7 +154,7 @@ def display_agent_data(algorithm, shape, page_number, items_per_page=10):
                     episodes = entry.get("episodes", "Unknown")
                     max_steps = entry.get("max_steps", "Unknown")
 
-                    fig = plot_trajectory(string_policy_grid, starting_position)
+                    fig = plot_trajectory(string_policy_grid, starting_position, id, return_fig=True)
                     fig.suptitle(f'Agent {id} - {algorithm}  Start pos: {starting_position}  Episodes: {episodes}  Max steps: {max_steps}')
                     plt.show()
             else:
