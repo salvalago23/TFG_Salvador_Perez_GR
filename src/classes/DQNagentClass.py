@@ -219,7 +219,7 @@ class DQNAgent():
 
 
     def plot_results(self, rolling_length=1, rolling_error=1):
-        print("Agent", self.id+1, "steps stats:", "\n  -Average:", round(np.mean(self.env.length_queue), 2), "\n  -Std dev:", round(np.std(self.env.length_queue), 2), "\n  -Median:", int(np.median(self.env.length_queue)), "\n  -Best:", np.min(self.env.length_queue))
+        print("Agent", self.id+1, "steps stats:", "\n  -Average:", round(np.mean(self.env.length_queue), 2), "\n  -Std dev:", round(np.std(self.env.length_queue), 2), "\n   -Median:", int(np.median(self.env.length_queue)), "\n     -Best:", np.min(self.env.length_queue))
         fig, axs = plt.subplots(ncols=3, figsize=(20, 5))
 
         axs[0].set_title("Episode rewards")
