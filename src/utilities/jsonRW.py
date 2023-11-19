@@ -5,7 +5,7 @@ from utilities.plots import plot_trajectory
 import matplotlib.pyplot as plt
 
 def get_json_file_path(algorithm, shape):
-    json_file_path = "../data/agent_models/json/agents_data_"
+    json_file_path = "../data/agent_models/agents_data_"
 
     if algorithm == "Q-Learning":
         json_file_path += "QLearning"
