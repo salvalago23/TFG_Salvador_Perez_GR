@@ -37,6 +37,7 @@ class QLearningAgent:
         self.final_epsilon = final_epsilon
 
         self.training_error = []
+        self.total_steps = 0
 
     def get_action(self, obs):
         """
@@ -68,18 +69,22 @@ class QLearningAgent:
             
             # play one episode
             while not done:
+                self.total_steps += 1
                 action = self.get_action(obs)
                 next_obs, reward, terminated, truncated, _ = self.env.step(action)
                 done = truncated or terminated
                 next_obs = tuple(next_obs)
+
                 # update the agent
                 self.update(obs, action, reward, done, next_obs)
+
                 obs = next_obs
 
             self.epsilon = max(self.final_epsilon, self.epsilon - self.epsilon_decay)
 
-    def plot_results(self, rolling_length = 3):
-        fig, axs = plt.subplots(ncols=3, figsize=(12, 5))
+    def plot_results(self, rolling_length=1, rolling_error=1):
+        fig, axs = plt.subplots(ncols=3, figsize=(20, 5))
+        
         axs[0].set_title("Episode rewards")
         axs[0].set_ylabel("Score")
         axs[0].set_xlabel("Episode #")
@@ -95,7 +100,7 @@ class QLearningAgent:
         axs[2].set_title("Training Error")
         axs[2].set_ylabel("Value")
         axs[2].set_xlabel("Temporal difference #")
-        training_error_moving_average = (np.convolve(np.array(self.training_error), np.ones(rolling_length), mode="valid") / rolling_length)
+        training_error_moving_average = (np.convolve(np.array(self.training_error), np.ones(rolling_error), mode="same") / rolling_error)
         axs[2].plot(range(len(training_error_moving_average)), training_error_moving_average)
 
         fig.suptitle(f'Agent {self.id+1} - Stats')

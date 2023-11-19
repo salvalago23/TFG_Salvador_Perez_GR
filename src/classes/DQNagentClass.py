@@ -85,6 +85,8 @@ class DQNAgent():
         self.tau = tau
         self.update_every = update_every
 
+        self.training_error = []
+
         #Q- Network
         self.qnetwork_local = QNetwork(self.env.observation_space.shape[0], self.env.action_space.n, fc1_unit, fc2_unit).to(device)
         self.qnetwork_target = QNetwork(self.env.observation_space.shape[0], self.env.action_space.n, fc1_unit, fc2_unit).to(device)
@@ -95,6 +97,7 @@ class DQNAgent():
         self.memory = ReplayBuffer(self.env.action_space.n, self.buffer_size, self.batch_size)
         # Initialize time step (for updating every self.update_every steps)
         self.t_step = 0
+        self.total_steps = 0
         
     def step(self, state, action, reward, next_step, done):
         # Save experience in replay memory
@@ -103,7 +106,7 @@ class DQNAgent():
         # Learn every self.update_every time steps.
         self.t_step = (self.t_step+1) % self.update_every
         if self.t_step == 0:
-            # If enough samples are available in memory, get radom subset and learn
+            # If enough samples are available in memory, get random subset and learn
             if len(self.memory)>self.batch_size:
                 experience = self.memory.sample()
                 self.learn(experience, self.gamma)
@@ -136,7 +139,7 @@ class DQNAgent():
             gamma (float): discount factor
         """
         states, actions, rewards, next_state, dones = experiences
-        ## TODO: compute and minimize the loss
+        #Compute and minimize the loss
         criterion = torch.nn.MSELoss()
         # Local model is one which we need to train so it's in training mode
         self.qnetwork_local.train()
@@ -153,6 +156,12 @@ class DQNAgent():
         # .detach() ->  Returns a new Tensor, detached from the current graph.
         labels = rewards + (gamma* labels_next*(1-dones))
         
+        # Calculate temporal differences
+        temporal_differences = labels - predicted_targets
+
+        # Append temporal differences to the list
+        self.training_error.extend(temporal_differences.detach().cpu().numpy())
+
         loss = criterion(predicted_targets,labels).to(device)
         self.optimizer.zero_grad()
         loss.backward()
@@ -190,10 +199,12 @@ class DQNAgent():
             state, _ = self.env.reset()
 
             while not done:
+                self.total_steps += 1
                 action = self.get_action(state)
                 #print("State: ", state,"Action: ",action)
                 next_state, reward, terminated, truncated, _ = self.env.step(action)
                 done = truncated or terminated
+
                 self.step(state, action, reward, next_state, done)
                 ## above step decides whether we will train(learn) the network actor (local_qnetwork) or we will fill the replay buffer
                 ## if len replay buffer is equal to the batch size then we will train the network or otherwise we will add experience tuple in our replay buffer.
@@ -207,9 +218,9 @@ class DQNAgent():
         #torch.save(self.qnetwork_local.state_dict(), self.path_to_save)
 
 
-    def plot_results(self, rolling_length=1):
-        print("Agent", self.id+1, "steps stats:", "\tAverage:", round(np.mean(self.env.length_queue), 2), "\tStd dev:", round(np.std(self.env.length_queue), 2), "\tMedian:", np.median(self.env.length_queue), "\tBest:", np.min(self.env.length_queue))
-        fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
+    def plot_results(self, rolling_length=1, rolling_error=1):
+        print("Agent", self.id+1, "steps stats:", "\n  -Average:", round(np.mean(self.env.length_queue), 2), "\n  -Std dev:", round(np.std(self.env.length_queue), 2), "\n  -Median:", int(np.median(self.env.length_queue)), "\n  -Best:", np.min(self.env.length_queue))
+        fig, axs = plt.subplots(ncols=3, figsize=(20, 5))
 
         axs[0].set_title("Episode rewards")
         axs[0].set_ylabel("Score")
@@ -221,6 +232,14 @@ class DQNAgent():
         axs[1].set_xlabel("Episode #")
         length_moving_average = (np.convolve(np.array(self.env.length_queue).flatten(), np.ones(rolling_length), mode="valid") / rolling_length)
         axs[1].plot(range(len(length_moving_average)), length_moving_average)
+
+        axs[2].set_title("Training Error")
+        axs[2].set_ylabel("Value")
+        axs[2].set_xlabel("Temporal difference #")
+        training_error_moving_average = (np.convolve([float(e) for e in self.training_error], np.ones(rolling_error), mode="valid") / rolling_error)
+
+        #training_error_moving_average = (np.convolve(np.array(self.training_error), np.ones(rolling_error), mode="valid") / rolling_error)
+        axs[2].plot(range(len(training_error_moving_average)), training_error_moving_average)
 
         fig.suptitle(f'Agent {self.id+1} - Stats')
         plt.show()
@@ -253,6 +272,12 @@ class DDQNAgent(DQNAgent):
 
         # .detach() ->  Returns a new Tensor, detached from the current graph.
         labels = rewards + (gamma* labels_next*(1-dones))
+
+        # Calculate temporal differences
+        temporal_differences = labels - predicted_targets
+
+        # Append temporal differences to the list
+        self.training_error.extend(temporal_differences.detach().cpu().numpy())
 
         loss = criterion(predicted_targets,labels).to(device)
         self.optimizer.zero_grad()
