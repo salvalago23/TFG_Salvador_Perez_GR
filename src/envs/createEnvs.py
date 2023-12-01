@@ -67,7 +67,7 @@ def createNNEnv(shape, max_steps=500, render=False, id=0):
     return env
 
 
-def createOfflineEnv(shape, n_models, max_steps=500, render=False, id=0):
+def createOfflineEnv(shape, n_models, reward, max_steps=500, render=False, id=0):
     # Register the environment
     id = 'gridOffline-v' + str(id)
 
@@ -79,6 +79,6 @@ def createOfflineEnv(shape, n_models, max_steps=500, render=False, id=0):
         maze = mazes["14x14"]
 
     # Create the environment
-    env = gym.make(id, maze=maze, shape=shape, n_models=n_models, render=render, max_steps_per_episode=max_steps)
+    env = gym.make(id, maze=maze, shape=shape, n_models=n_models, reward=reward, render=render, max_steps_per_episode=max_steps)
 
     return env

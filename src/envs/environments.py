@@ -264,7 +264,7 @@ class CSVGeneratorEnv(gym.Env):
 
 
 class OfflineGridWorldEnv(gym.Env):
-    def __init__(self, maze, shape, n_models, render, max_steps_per_episode):
+    def __init__(self, maze, shape, n_models, reward, render, max_steps_per_episode):
         self.maze = np.array(maze["maze"])  # Maze represented as a 2D numpy array
         self.starting_positions = maze["starting_pos"] #list of possible starting positions
         
@@ -280,14 +280,16 @@ class OfflineGridWorldEnv(gym.Env):
         self.observation_space = spaces.Box(low=np.array([0, 0]), high=np.array([self.num_rows, self.num_cols]), dtype=np.int32)
         self.action_space = spaces.Discrete(4)
 
+        self.reward = reward
+
         # Load models
         print("Loading models...")
         self.grid_models = []
 
         for i in range(n_models):
-            if self.num_rows == 5:
+            if self.shape == "5x5":
                 model = NeuralNetwork(3, 2)
-            elif self.num_rows == 14:
+            elif self.shape == "14x14":
                 model = NeuralNetwork(3, 2, 128, 64)
 
             model.load_state_dict(torch.load("../data/offline_models/{}_{}.pt".format(self.shape, i)))
@@ -369,9 +371,15 @@ class OfflineGridWorldEnv(gym.Env):
             self._agent_location = new_pos
 
         # An episode is done if the agent has reached the target
-        terminated = np.array_equal(self._agent_location, self._target_location)        
-        reward = 1 if terminated else 0#highest_probability_value  # Binary sparse rewards
+        terminated = np.array_equal(self._agent_location, self._target_location)
 
+        if self.reward == 1:
+            reward = 1 if terminated else 0#highest_probability_value  # Binary sparse rewards
+        elif self.reward == 1000:
+            if highest_probability_value < 0.5:
+                reward = -1000
+            else:
+                reward = 1 if terminated else 0
         #print("New position is: {}".format(self._agent_location))
         #print("Reward is: {}".format(reward))
         #input("Press Enter to continue...")
