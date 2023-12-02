@@ -282,6 +282,8 @@ class OfflineGridWorldEnv(gym.Env):
 
         self.reward = reward
 
+        self.rewardHistory = []
+
         # Load models
         print("Loading models...")
         self.grid_models = []
@@ -298,6 +300,9 @@ class OfflineGridWorldEnv(gym.Env):
             self.grid_models.append(model)
         
         print("Models loaded")
+
+
+
 
         if render:
         # Initialize Pygame
@@ -366,6 +371,9 @@ class OfflineGridWorldEnv(gym.Env):
         #create a numpy array with the highest probability state
         new_pos = np.array([np.column_stack(np.array([np.int32(highest_probability_state[0]), np.int32(highest_probability_state[1])]))])[0][0]
 
+
+        old_pos = self._agent_location
+
         # Check if the new position is valid
         if self._is_valid_position(new_pos):
             self._agent_location = new_pos
@@ -378,6 +386,7 @@ class OfflineGridWorldEnv(gym.Env):
         elif self.reward == 1000:
             if highest_probability_value < 0.5:
                 reward = -1000
+                self.rewardHistory.append([old_pos, action, new_pos])
             else:
                 reward = 1 if terminated else 0
         #print("New position is: {}".format(self._agent_location))
