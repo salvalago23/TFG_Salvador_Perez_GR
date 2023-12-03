@@ -74,6 +74,11 @@ class CSVGeneratorEnv(gym.Env):
         return self._agent_location, reward, terminated, False, {}
 
     def test(self, input):
+        """
+        This function is used to test the agent in the environment. It takes as input the current state and the action to be taken and returns the next state.
+        Args:
+            input (np.array): [position, action]
+        """
         position = np.array(input[0:2])
         action = input[2]
         # First we check if the position is not a wall

@@ -5,7 +5,8 @@ import gymnasium as gym
 from gymnasium import spaces
 
 import torch
-from NeuralNetwork import NeuralNetwork
+
+from envs.NeuralNetwork import NeuralNetwork
 
 class OfflineGridWorldEnv(gym.Env):
     def __init__(self, maze, shape, n_models, reward, render, max_steps_per_episode):
@@ -24,7 +25,9 @@ class OfflineGridWorldEnv(gym.Env):
         self.observation_space = spaces.Box(low=np.array([0, 0]), high=np.array([self.num_rows, self.num_cols]), dtype=np.int32)
         self.action_space = spaces.Discrete(4)
 
-        self.reward = reward
+        self.reward = reward[0]
+        self.penalty = reward[1]
+        self.penalty_threshold = reward[2]
 
         self.rewardHistory = []
 
@@ -38,7 +41,7 @@ class OfflineGridWorldEnv(gym.Env):
             elif self.shape == "14x14":
                 model = NeuralNetwork(3, 2, 128, 64)
 
-            model.load_state_dict(torch.load("../data/offline_models/{}_{}.pt".format(self.shape, i)))
+            model.load_state_dict(torch.load("../data/OfflineModels2/{}_{}.pt".format(self.shape, i)))
             model.eval()
 
             self.grid_models.append(model)
@@ -57,7 +60,6 @@ class OfflineGridWorldEnv(gym.Env):
     def randomize_start_pos(self):
         # Aqui realmente con guardar las coordenadas en una variable ya valdria, pero pinto la "S" en el mapa para poder visualizarlo más tarde
         # There is a predifined start position with an S in the maze. Before assigning a random start position I have to convert the older one to "."
-        
         self.maze[self.maze == 'S'] = '.'
         start_pos = self.starting_positions[np.random.randint(0, len(self.starting_positions))]
         self.maze[start_pos[0], start_pos[1]] = 'S'
@@ -110,7 +112,6 @@ class OfflineGridWorldEnv(gym.Env):
 
         #create a numpy array with the highest probability state
         new_pos = np.array([np.column_stack(np.array([np.int32(highest_probability_state[0]), np.int32(highest_probability_state[1])]))])[0][0]
-
         old_pos = self._agent_location
 
         # Check if the new position is valid
@@ -120,22 +121,28 @@ class OfflineGridWorldEnv(gym.Env):
         # An episode is done if the agent has reached the target
         terminated = np.array_equal(self._agent_location, self._target_location)
 
-        if self.reward == 1:
-            reward = 1 if terminated else 0#highest_probability_value  # Binary sparse rewards
-        elif self.reward == 1000:
-            if highest_probability_value < 0.6:
-                reward = -1000
-                self.rewardHistory.append([old_pos, action, new_pos])
+
+        #AQUI HAY QUE TENER CUIDADO PQ SI LLEGA A LA META A TRAVES DE UNA TRANSICION CON PROBABILIDAD MENOR QUE EL UMBRAL,
+        #TIENE PRIORIDAD LA RECOMPENSA DE LLEGAR A LA META SOBRE LA PENALIZACION
+
+        if terminated:
+            reward = self.reward
+        else:
+            if self.penalty != 0:
+                if highest_probability_value < self.penalty_threshold:
+                    reward = self.penalty
+                    self.rewardHistory.append([old_pos, action, new_pos])
+                else:
+                    reward = 0
             else:
-                reward = 1 if terminated else 0
-
-
+                reward = 0
+        
         #print("New position is: {}".format(self._agent_location))
         #print("Reward is: {}".format(reward))
         #input("Press Enter to continue...")
 
         # An episode is truncated if the agent has reached the maximum number of steps
-        #do it with ternal operator
+        # do it with ternal operator
         truncated = True if self.step_count == self.max_steps_per_episode else False
 
         return self._agent_location, reward, terminated, truncated, {}

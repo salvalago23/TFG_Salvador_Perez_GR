@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from envs.CreateEnvs import createOfflineEnv
 
 class OfflineQLearningAgent:
-    def __init__(self, id, shape, n_models, n_episodes, max_steps, learning_rate, start_epsilon, epsilon_decay, final_epsilon, discount_factor, reward):
+    def __init__(self, id, shape, n_models, n_episodes, max_steps, reward, learning_rate, start_epsilon, epsilon_decay, final_epsilon, discount_factor):
         """Initialize a Reinforcement Learning agent with an empty dictionary
         of state-action values (q_values), a learning rate and an epsilon.
         Args:
