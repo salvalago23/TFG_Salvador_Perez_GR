@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-from envs.CreateEnvs import createNNEnv
+from envs.CreateEnvs import createOfflineEnv
 
 class QNetwork(nn.Module):
     """ Actor (Policy) Model."""
@@ -40,9 +40,9 @@ class QNetwork(nn.Module):
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-class DQNAgent():
+class OfflineDQNAgent():
     """Interacts with and learns form environment."""
-    def __init__(self, id, algorithm, shape, fc1_unit, fc2_unit, n_episodes, max_steps, initial_eps, final_eps, eps_decay, buffer_size, batch_size, gamma, tau, lr, update_every):
+    def __init__(self, id, algorithm, shape, fc1_unit, fc2_unit, n_models, n_episodes, max_steps, reward, initial_eps, final_eps, eps_decay, buffer_size, batch_size, gamma, tau, lr, update_every):
         """Initialize an Agent object.
         Params
         =======
@@ -66,8 +66,8 @@ class DQNAgent():
         self.algorithm = algorithm
 
         self.shape = shape
-        self.env = createNNEnv(shape, id=id, max_steps=max_steps)
-        self.env.unwrapped.randomize_start_pos()
+        self.env = createOfflineEnv(shape, n_models, reward, id=id, max_steps=max_steps)
+        #self.env.unwrapped.randomize_start_pos()
         
         self.state_size = self.env.observation_space.shape[0]
         self.action_size = self.env.action_space.n
@@ -244,7 +244,7 @@ class DQNAgent():
         fig.suptitle(f'Agent {self.id+1} - Stats')
         plt.show()
 
-class DDQNAgent(DQNAgent):
+class OfflineDDQNAgent(OfflineDQNAgent):
     """Interacts with and learns form environment."""
 
     def learn(self, experiences, gamma):

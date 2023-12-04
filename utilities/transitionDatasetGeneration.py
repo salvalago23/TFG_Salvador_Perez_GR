@@ -56,8 +56,8 @@ class ModelTrainer:
         self.input_data = np.column_stack((self.sy_values, self.sx_values, self.a_values))
         self.target_data = np.column_stack((self.sy1_values, self.sx1_values))
 
-    def train(self):
-        X_train, X_test, y_train, y_test = train_test_split(self.input_data, self.target_data, test_size=0.05)
+    def train(self, test_size=0.05):
+        X_train, X_test, y_train, y_test = train_test_split(self.input_data, self.target_data, test_size=test_size)
         
         self.X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
         self.y_train_tensor = torch.tensor(y_train, dtype=torch.float32)
@@ -370,8 +370,10 @@ def probMapper(grid, n_models, lower_threshold = 35.0, higher_threshold = 60.0):
 
     empty_grid = [['' for i in range(len(grid[0]))] for j in range(len(grid))]
 
-    for y in range(len(grid)):
-        for x in range(len(grid[y])):
+    n_rows, n_cols = len(grid), len(grid[0])
+
+    for y in range(n_rows):
+        for x in range(n_cols):
             if grid[y][x] == "#":
                 empty_grid[y][x] = "#" 
             else:
@@ -403,16 +405,14 @@ def probMapper(grid, n_models, lower_threshold = 35.0, higher_threshold = 60.0):
 
                     highest_probability = [highest_probability[0], highest_probability[1]]
 
+
                     for p in probability_dict:
                         empty_grid[y][x] = empty_grid[y][x] + str(p) + ": "+ str(round(float(probability_dict[p])*100, 2))+"% "
                         break
                     #print("Probabilidad " + str(p) + ": " + str(posibilidades.count(p)/len(posibilidades)*100) + "%")
 
-
-    #now I want to plot the grid, each cell containing their string
-
     binary_grid = np.where(np.array(empty_grid) == '#', 0, 1)
-    
+
     if shape == "5x5":
         plt.figure(figsize=(8, 8))
     elif shape == "14x14":
@@ -444,44 +444,89 @@ def probMapper(grid, n_models, lower_threshold = 35.0, higher_threshold = 60.0):
                 text4state = text[3].split(":")[0].replace(" ", "")
                 text4prob = text[3].split(":")[1] + "%"
 
+                for a in range(4):
+
+                    if a == 0:  # Mover hacia el norte
+                        if binary_grid[max(0, i - 1), j] == 0:
+                            y1, x1 = i, j
+                        else:
+                            y1, x1 = max(0, i - 1), j
+
+                        if y1 != int(text1state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text1state.replace("[", "").replace("]", "").split(",")[1]):
+                            color1state = 'orange'
+                        else:
+                            color1state = 'green'
+                    
+                    elif a == 1:  # Mover hacia el sur
+                        if binary_grid[min(n_rows - 1, i + 1), j] == 0:
+                            y1, x1 = i, j
+                        else:
+                            y1, x1 = min(n_rows - 1, i + 1), j
+
+                        if y1 != int(text2state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text2state.replace("[", "").replace("]", "").split(",")[1]):
+                            color2state = 'orange'
+                        else:
+                            color2state = 'green'
+                    
+                    elif a == 2:  # Mover hacia el oeste
+                        if binary_grid[i, max(0, j - 1)] == 0:
+                            y1, x1 = i, j
+                        else:
+                            y1, x1 = i, max(0, j - 1)
+                        
+                        if y1 != int(text3state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text3state.replace("[", "").replace("]", "").split(",")[1]):
+                            color3state = 'orange'
+                        else:
+                            color3state = 'green'
+                    
+                    elif a == 3:  # Mover hacia el este
+                        if binary_grid[i, min(n_cols - 1, j + 1)] == 0:
+                            y1, x1 = i, j
+                        else:
+                            y1, x1 = i, min(n_cols - 1, j + 1)
+                        
+                        if y1 != int(text4state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text4state.replace("[", "").replace("]", "").split(",")[1]):
+                            color4state = 'orange'
+                        else:
+                            color4state = 'green'
 
                 # Add text based on the sector
                 if float(text[0].split(":")[1]) > higher_threshold:
-                    color1 = 'green'
+                    color1prob = 'green'
                 elif float(text[0].split(":")[1]) < lower_threshold:
-                    color1 = 'red'
+                    color1prob = 'red'
                 else:
-                    color1 = 'black'
+                    color1prob = 'black'
                 if float(text[1].split(":")[1]) > higher_threshold:
-                    color2 = 'green'
+                    color2prob = 'green'
                 elif float(text[1].split(":")[1]) < lower_threshold:
-                    color2 = 'red'
+                    color2prob = 'red'
                 else:
-                    color2 = 'black'
+                    color2prob = 'black'
                 if float(text[2].split(":")[1]) > higher_threshold:
-                    color3 = 'green'
+                    color3prob = 'green'
                 elif float(text[2].split(":")[1]) < lower_threshold:
-                    color3 = 'red'
+                    color3prob = 'red'
                 else:
-                    color3 = 'black'
+                    color3prob = 'black'
                 if float(text[3].split(":")[1]) > higher_threshold:
-                    color4 = 'green'
+                    color4prob = 'green'
                 elif float(text[3].split(":")[1]) < lower_threshold:
-                    color4 = 'red'
+                    color4prob = 'red'
                 else:
-                    color4 = 'black'
+                    color4prob = 'black'
 
-                plt.text(j, i - .4, text1state, ha='center', va='center', fontsize=6, color=color1)  # North
-                plt.text(j, i - .25, text1prob, ha='center', va='center', fontsize=6, color=color1)  # North
+                plt.text(j, i - .4, text1state, ha='center', va='center', fontsize=6, color=color1state)  # North
+                plt.text(j, i - .25, text1prob, ha='center', va='center', fontsize=6, color=color1prob)  # North
 
-                plt.text(j, i + .25, text2prob, ha='center', va='center', fontsize=6, color=color2)  # South
-                plt.text(j, i + .4, text2state, ha='center', va='center', fontsize=6, color=color2)  # South
+                plt.text(j, i + .25, text2prob, ha='center', va='center', fontsize=6, color=color2prob)  # South
+                plt.text(j, i + .4, text2state, ha='center', va='center', fontsize=6, color=color2state)  # South
 
-                plt.text(j - .3, i - .1, text3state, ha='center', va='center', fontsize=6, color=color3)  # West
-                plt.text(j - .3, i + .05, text3prob, ha='center', va='center', fontsize=6, color=color3)  # West
+                plt.text(j - .3, i - .1, text3state, ha='center', va='center', fontsize=6, color=color3state)  # West
+                plt.text(j - .3, i + .05, text3prob, ha='center', va='center', fontsize=6, color=color3prob)  # West
 
-                plt.text(j + .3, i - .1, text4state, ha='center', va='center', fontsize=6, color=color4)  # East
-                plt.text(j + .3, i + .05, text4prob, ha='center', va='center', fontsize=6, color=color4)  # East
+                plt.text(j + .3, i - .1, text4state, ha='center', va='center', fontsize=6, color=color4state)  # East
+                plt.text(j + .3, i + .05, text4prob, ha='center', va='center', fontsize=6, color=color4prob)  # East
 
 
     #  Add row numbering on the left from top to bottom
