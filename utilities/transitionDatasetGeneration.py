@@ -415,8 +415,12 @@ def probMapper(grid, n_models, lower_threshold = 35.0, higher_threshold = 60.0):
 
     if shape == "5x5":
         plt.figure(figsize=(8, 8))
+        fontsize1 = 8
+        fontsize2 = 10
     elif shape == "14x14":
         plt.figure(figsize=(16, 16))
+        fontsize1 = 6
+        fontsize2 = 8
     # Create a plot
     plt.imshow(binary_grid, cmap='gray', interpolation='nearest')
     # Set the locations of gridlines explicitly to have them at non
@@ -516,18 +520,20 @@ def probMapper(grid, n_models, lower_threshold = 35.0, higher_threshold = 60.0):
                 else:
                     color4prob = 'black'
 
-                plt.text(j, i - .4, text1state, ha='center', va='center', fontsize=6, color=color1state)  # North
-                plt.text(j, i - .25, text1prob, ha='center', va='center', fontsize=6, color=color1prob)  # North
+                plt.text(j, i - .4, text1state, ha='center', va='center', fontsize=fontsize1, color=color1state)  # North
+                plt.text(j, i - .25, text1prob, ha='center', va='center', fontsize=fontsize1, color=color1prob)  # North
 
-                plt.text(j, i + .25, text2prob, ha='center', va='center', fontsize=6, color=color2prob)  # South
-                plt.text(j, i + .4, text2state, ha='center', va='center', fontsize=6, color=color2state)  # South
+                plt.text(j, i + .25, text2state, ha='center', va='center', fontsize=fontsize1, color=color2state)  # South
+                plt.text(j, i + .4, text2prob, ha='center', va='center', fontsize=fontsize1, color=color2prob)  # South
 
-                plt.text(j - .3, i - .1, text3state, ha='center', va='center', fontsize=6, color=color3state)  # West
-                plt.text(j - .3, i + .05, text3prob, ha='center', va='center', fontsize=6, color=color3prob)  # West
+                plt.text(j - .3, i - .1, text3state, ha='center', va='center', fontsize=fontsize1, color=color3state)  # West
+                plt.text(j - .3, i + .05, text3prob, ha='center', va='center', fontsize=fontsize1, color=color3prob)  # West
 
-                plt.text(j + .3, i - .1, text4state, ha='center', va='center', fontsize=6, color=color4state)  # East
-                plt.text(j + .3, i + .05, text4prob, ha='center', va='center', fontsize=6, color=color4prob)  # East
-
+                plt.text(j + .3, i - .1, text4state, ha='center', va='center', fontsize=fontsize1, color=color4state)  # East
+                plt.text(j + .3, i + .05, text4prob, ha='center', va='center', fontsize=fontsize1, color=color4prob)  # East
+            
+            else:
+                plt.text(j, i, '[' + str(j) + ',' + str(i) + ']', ha='center', va='center', fontsize=fontsize2, color='white')
 
     #  Add row numbering on the left from top to bottom
     for i, label in enumerate(range(len(binary_grid))):
