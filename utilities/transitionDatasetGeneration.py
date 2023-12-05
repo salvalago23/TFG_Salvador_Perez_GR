@@ -56,7 +56,7 @@ class ModelTrainer:
         self.input_data = np.column_stack((self.sy_values, self.sx_values, self.a_values))
         self.target_data = np.column_stack((self.sy1_values, self.sx1_values))
 
-    def train(self, test_size=0.05):
+    def train(self, test_size=0.05, path = None):
         X_train, X_test, y_train, y_test = train_test_split(self.input_data, self.target_data, test_size=test_size)
         
         self.X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
@@ -79,8 +79,11 @@ class ModelTrainer:
         print("Trained successfully!")
         print(f'Final loss: {self.losses[-1]}\n')
 
-        #save the model with info of the shape and the id
-        torch.save(self.model.state_dict(), f'../data/OfflineModels2/{self.shape}_{self.id}.pt')
+        if path != None:
+            torch.save(self.model.state_dict(), f'{path}/{self.shape}_{self.id}.pt')
+        else:
+            #save the model with info of the shape and the id
+            torch.save(self.model.state_dict(), f'../data/OfflineModels2/{self.shape}_{self.id}.pt')
 
     def test_loss(self):
         with torch.no_grad():
