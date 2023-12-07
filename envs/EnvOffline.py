@@ -41,7 +41,7 @@ class OfflineGridWorldEnv(gym.Env):
             elif self.shape == "14x14":
                 model = NeuralNetwork(3, 2, 128, 64)
 
-            model.load_state_dict(torch.load("../data/OfflineModels2/{}_{}.pt".format(self.shape, i)))
+            model.load_state_dict(torch.load("../data/OfflineEnsembleModels/{}_{}.pt".format(self.shape, i)))
             model.eval()
 
             self.grid_models.append(model)

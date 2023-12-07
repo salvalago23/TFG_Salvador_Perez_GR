@@ -83,7 +83,7 @@ class ModelTrainer:
             torch.save(self.model.state_dict(), f'{path}/{self.shape}_{self.id}.pt')
         else:
             #save the model with info of the shape and the id
-            torch.save(self.model.state_dict(), f'../data/OfflineModels2/{self.shape}_{self.id}.pt')
+            torch.save(self.model.state_dict(), f'../data/OfflineEnsembleModels/{self.shape}_{self.id}.pt')
 
     def test_loss(self):
         with torch.no_grad():
@@ -349,8 +349,8 @@ def model_tester_output_txt(grid, models_arr):
 
 
 #FUNCION PARA MOSTRAR UNA GRÁFICA CON LAS PROBABILIDADES DE CADA ACCIÓN PARA CADA CASILLA DEL GRID
-def probMapper(grid, n_models, lower_threshold = 35.0, higher_threshold = 60.0):
-    print("Loading models...")
+def probMapper(grid, n_models, threshold = 50.0, path=None, returnCount=False):
+    #print("Loading models...")
     grid_models = []
 
     if len(grid) == 5:
@@ -364,12 +364,17 @@ def probMapper(grid, n_models, lower_threshold = 35.0, higher_threshold = 60.0):
         elif shape == "14x14":
             model = NeuralNetwork(3, 2, 128, 64)
 
-        model.load_state_dict(torch.load("../data/OfflineModels2/{}_{}.pt".format(shape, i)))
+        if path != None:
+            model.load_state_dict(torch.load(f'{path}/{shape}_{i}.pt'))
+            #print(f'{path}/{shape}_{i}.pt')
+        else:
+            model.load_state_dict(torch.load("../data/OfflineEnsembleModels/{}_{}.pt".format(shape, i)))
+
         model.eval()
 
         grid_models.append(model)
     
-    print("Models loaded")
+    #print("Models loaded")
 
     empty_grid = [['' for i in range(len(grid[0]))] for j in range(len(grid))]
 
@@ -451,6 +456,8 @@ def probMapper(grid, n_models, lower_threshold = 35.0, higher_threshold = 60.0):
                 text4state = text[3].split(":")[0].replace(" ", "")
                 text4prob = text[3].split(":")[1] + "%"
 
+                WrongTransitionsCount = 0
+                
                 for a in range(4):
 
                     if a == 0:  # Mover hacia el norte
@@ -461,6 +468,7 @@ def probMapper(grid, n_models, lower_threshold = 35.0, higher_threshold = 60.0):
 
                         if y1 != int(text1state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text1state.replace("[", "").replace("]", "").split(",")[1]):
                             color1state = 'orange'
+                            WrongTransitionsCount += 1
                         else:
                             color1state = 'green'
                     
@@ -472,6 +480,7 @@ def probMapper(grid, n_models, lower_threshold = 35.0, higher_threshold = 60.0):
 
                         if y1 != int(text2state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text2state.replace("[", "").replace("]", "").split(",")[1]):
                             color2state = 'orange'
+                            WrongTransitionsCount += 1
                         else:
                             color2state = 'green'
                     
@@ -483,6 +492,7 @@ def probMapper(grid, n_models, lower_threshold = 35.0, higher_threshold = 60.0):
                         
                         if y1 != int(text3state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text3state.replace("[", "").replace("]", "").split(",")[1]):
                             color3state = 'orange'
+                            WrongTransitionsCount += 1
                         else:
                             color3state = 'green'
                     
@@ -494,34 +504,32 @@ def probMapper(grid, n_models, lower_threshold = 35.0, higher_threshold = 60.0):
                         
                         if y1 != int(text4state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text4state.replace("[", "").replace("]", "").split(",")[1]):
                             color4state = 'orange'
+                            WrongTransitionsCount += 1
                         else:
                             color4state = 'green'
 
+                LowPercentageCount = 0
                 # Add text based on the sector
-                if float(text[0].split(":")[1]) > higher_threshold:
+                if float(text[0].split(":")[1]) >= threshold:
                     color1prob = 'green'
-                elif float(text[0].split(":")[1]) < lower_threshold:
+                else:
                     color1prob = 'red'
-                else:
-                    color1prob = 'black'
-                if float(text[1].split(":")[1]) > higher_threshold:
+                    LowPercentageCount += 1
+                if float(text[1].split(":")[1]) >= threshold:
                     color2prob = 'green'
-                elif float(text[1].split(":")[1]) < lower_threshold:
+                else:
                     color2prob = 'red'
-                else:
-                    color2prob = 'black'
-                if float(text[2].split(":")[1]) > higher_threshold:
+                    LowPercentageCount += 1
+                if float(text[2].split(":")[1]) >= threshold:
                     color3prob = 'green'
-                elif float(text[2].split(":")[1]) < lower_threshold:
+                else:
                     color3prob = 'red'
-                else:
-                    color3prob = 'black'
-                if float(text[3].split(":")[1]) > higher_threshold:
+                    LowPercentageCount += 1
+                if float(text[3].split(":")[1]) >= threshold:
                     color4prob = 'green'
-                elif float(text[3].split(":")[1]) < lower_threshold:
-                    color4prob = 'red'
                 else:
-                    color4prob = 'black'
+                    color4prob = 'red'
+                    LowPercentageCount += 1
 
                 plt.text(j, i - .4, text1state, ha='center', va='center', fontsize=fontsize1, color=color1state)  # North
                 plt.text(j, i - .25, text1prob, ha='center', va='center', fontsize=fontsize1, color=color1prob)  # North
@@ -546,5 +554,142 @@ def probMapper(grid, n_models, lower_threshold = 35.0, higher_threshold = 60.0):
     for j, label in enumerate(range(len(binary_grid[0]))):
         plt.text(j, len(binary_grid) - 0.3, str(label), ha='center', va='top', fontsize=12, color='black')
 
-    # Show the plot
     plt.show()
+
+    if returnCount:
+        return WrongTransitionsCount, LowPercentageCount
+    
+    #FUNCION PARA MOSTRAR UNA GRÁFICA CON LAS PROBABILIDADES DE CADA ACCIÓN PARA CADA CASILLA DEL GRID
+def probCounter(grid, n_models, threshold = 50.0, path=None):
+    WrongTransitionsCount = 0
+    LowPercentageCount = 0
+    
+    #print("Loading models...")
+    grid_models = []
+
+    if len(grid) == 5:
+        shape = "5x5"
+    elif len(grid) == 14:
+        shape = "14x14"
+
+    for i in range(n_models):
+        if shape == "5x5":
+            model = NeuralNetwork(3, 2)
+        elif shape == "14x14":
+            model = NeuralNetwork(3, 2, 128, 64)
+
+        if path != None:
+            model.load_state_dict(torch.load(f'{path}/{shape}_{i}.pt'))
+            #print(f'{path}/{shape}_{i}.pt')
+        else:
+            model.load_state_dict(torch.load("../data/OfflineEnsembleModels/{}_{}.pt".format(shape, i)))
+
+        model.eval()
+
+        grid_models.append(model)
+    
+    #print("Models loaded")
+
+    empty_grid = [['' for i in range(len(grid[0]))] for j in range(len(grid))]
+
+    n_rows, n_cols = len(grid), len(grid[0])
+
+    for y in range(n_rows):
+        for x in range(n_cols):
+            if grid[y][x] == "#":
+                empty_grid[y][x] = "#" 
+            else:
+                for i in range(4):
+                    posibilidades = []
+
+                    test_input = torch.tensor([[float(y), float(x), float(i)]], dtype=torch.float32)
+                    
+                    for i in range(len(grid_models)):
+                        resultado = grid_models[i](test_input)
+                        resultado = resultado.detach().numpy()
+                        posibilidades.append([round(resultado[0][0]), round(resultado[0][1])])
+                    
+                    #Calculo el porcentaje de veces que aparece cada posibilidad
+                    probability_dict = {str(posibilidades.count(p)/len(posibilidades)*100) + "%": p for p in posibilidades}
+
+                    probability_dict = {}
+                    for p in posibilidades:
+                        if not str(p) in probability_dict:
+                            probability_dict[str(p)] = str(posibilidades.count(p)/len(posibilidades))
+
+                    #Ordeno el diccionario por las probabilidades de mayor a menor
+                    probability_dict = {k: v for k, v in sorted(probability_dict.items(), key=lambda item: item[1], reverse=True)}      
+                    highest_probability = list(probability_dict.keys())[0]
+
+                    #convertirla de nuevo a lista
+                    highest_probability = highest_probability.replace("[", "").replace("]", "").split(", ")
+                    highest_probability = [highest_probability[0], highest_probability[1]]
+
+                    for p in probability_dict:
+                        empty_grid[y][x] = empty_grid[y][x] + str(p) + ": "+ str(round(float(probability_dict[p])*100, 2))+"% "
+                        break
+
+    binary_grid = np.where(np.array(empty_grid) == '#', 0, 1)
+
+    # Draw diagonal lines in each cell to divide it into sectors
+    for i in range(len(binary_grid)):
+        for j in range(len(binary_grid[0])):
+
+            if binary_grid[i, j] == 1:  # Check if the cell is white
+                text = empty_grid[i][j].split("%")
+                text1state = text[0].split(":")[0].replace(" ", "")
+                text2state = text[1].split(":")[0].replace(" ", "")
+                text3state = text[2].split(":")[0].replace(" ", "")
+                text4state = text[3].split(":")[0].replace(" ", "")
+
+                for a in range(4):
+                    if a == 0:  # Mover hacia el norte
+                        if binary_grid[max(0, i - 1), j] == 0:
+                            y1, x1 = i, j
+                        else:
+                            y1, x1 = max(0, i - 1), j
+
+                        if y1 != int(text1state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text1state.replace("[", "").replace("]", "").split(",")[1]):
+                            WrongTransitionsCount += 1
+                    
+                    elif a == 1:  # Mover hacia el sur
+                        if binary_grid[min(n_rows - 1, i + 1), j] == 0:
+                            y1, x1 = i, j
+                        else:
+                            y1, x1 = min(n_rows - 1, i + 1), j
+
+                        if y1 != int(text2state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text2state.replace("[", "").replace("]", "").split(",")[1]):
+                            WrongTransitionsCount += 1
+
+                    elif a == 2:  # Mover hacia el oeste
+                        if binary_grid[i, max(0, j - 1)] == 0:
+                            y1, x1 = i, j
+                        else:
+                            y1, x1 = i, max(0, j - 1)
+                        
+                        if y1 != int(text3state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text3state.replace("[", "").replace("]", "").split(",")[1]):
+                            WrongTransitionsCount += 1
+                    
+                    elif a == 3:  # Mover hacia el este
+                        if binary_grid[i, min(n_cols - 1, j + 1)] == 0:
+                            y1, x1 = i, j
+                        else:
+                            y1, x1 = i, min(n_cols - 1, j + 1)
+                        
+                        if y1 != int(text4state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text4state.replace("[", "").replace("]", "").split(",")[1]):
+                            WrongTransitionsCount += 1
+
+                # Add text based on the sector
+                if float(text[0].split(":")[1]) < threshold:
+                    LowPercentageCount += 1
+
+                if float(text[1].split(":")[1]) < threshold:
+                    LowPercentageCount += 1
+
+                if float(text[2].split(":")[1]) < threshold:
+                    LowPercentageCount += 1
+
+                if float(text[3].split(":")[1]) < threshold:
+                    LowPercentageCount < 1
+
+    return WrongTransitionsCount, LowPercentageCount
