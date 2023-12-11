@@ -35,7 +35,7 @@ class ModelTrainer:
         if shape == "5x5":
             self.model = NeuralNetwork(3, 2)
         elif shape == "14x14":
-            self.model = NeuralNetwork(3, 2, 128, 64)
+            self.model = NeuralNetwork(3, 2, 64, 64)
         
         self.n_epochs = n_epochs
 
@@ -362,7 +362,7 @@ def probMapper(grid, n_models, threshold = 50.0, path=None, returnCount=False):
         if shape == "5x5":
             model = NeuralNetwork(3, 2)
         elif shape == "14x14":
-            model = NeuralNetwork(3, 2, 128, 64)
+            model = NeuralNetwork(3, 2, 64, 64)
 
         if path != None:
             model.load_state_dict(torch.load(f'{path}/{shape}_{i}.pt'))
