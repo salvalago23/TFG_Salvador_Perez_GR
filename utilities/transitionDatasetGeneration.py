@@ -349,7 +349,7 @@ def model_tester_output_txt(grid, models_arr):
 
 
 #FUNCION PARA MOSTRAR UNA GRÁFICA CON LAS PROBABILIDADES DE CADA ACCIÓN PARA CADA CASILLA DEL GRID
-def probMapper(grid, n_models, threshold = 50.0, path=None, returnCount=False):
+def probMapper(grid, n_models, threshold = 50.0, path=None):
     #print("Loading models...")
     grid_models = []
 
@@ -555,9 +555,6 @@ def probMapper(grid, n_models, threshold = 50.0, path=None, returnCount=False):
         plt.text(j, len(binary_grid) - 0.3, str(label), ha='center', va='top', fontsize=12, color='black')
 
     plt.show()
-
-    if returnCount:
-        return WrongTransitionsCount, LowPercentageCount
     
     #FUNCION PARA MOSTRAR UNA GRÁFICA CON LAS PROBABILIDADES DE CADA ACCIÓN PARA CADA CASILLA DEL GRID
 def probCounter(grid, n_models, threshold = 50.0, path=None):
