@@ -5,6 +5,7 @@ from collections import defaultdict
 import os
 import csv
 import pandas as pd
+from itertools import cycle
 
 import torch
 import torch.nn as nn
@@ -34,7 +35,7 @@ def convert_to_tensor(transitions):
 
 #Clase para simplificar la creación de los modelos a partir de las sublistas de transiciones
 class ModelTrainer:
-    def __init__(self, train_dataset, val_dataset, n_epochs=100000, hidden_size=512, val_steps=1000, rand_seed = False):
+    def __init__(self, train_dataset, val_dataset, n_epochs, hidden_size, rand_seed = False):
         if rand_seed:
             self.seed = random.randint(1, 10000)
             torch.manual_seed(self.seed)
@@ -43,7 +44,7 @@ class ModelTrainer:
         self.X_val, self.y_val = convert_to_tensor(val_dataset)
 
         self.n_epochs = n_epochs
-        self.val_steps = val_steps
+
         self.train_losses = []
         self.val_losses = []
 
@@ -75,7 +76,7 @@ class ModelTrainer:
                 self.train_losses.append(loss_train.item())
 
             # Validation (every 1000 epochs)
-            if epoch % self.val_steps == 0:
+            if epoch % 1000 == 0:
                 self.val_losses.append(self.calculate_validation_loss())
 
         print("Trained successfully!")
@@ -104,58 +105,52 @@ class ModelTrainer:
         self.model.train()
         return loss_val
 
+def store_models(models_arr, folder_name):
+    # Create the directory if it doesn't exist
+    folder_path = f'../data/OfflineEnsembles/{folder_name}/'
+    os.makedirs(folder_path, exist_ok=True)
 
-def store_losses_CSV(models_arr, path, train=False, val=False):
-    if train:
-        csv_train_file_path = 'train_loss_' + path + '.csv'
+    # Save each model in the given folder
+    for i, model in enumerate(models_arr):
+        model_path = os.path.join(folder_path, f'model_{i}.pt')
+        torch.save(model.model.state_dict(), model_path)
 
-        data = []
+    # Save train and val CSV files
+    csv_train_file = os.path.join(folder_path, 'csv', 'train_loss.csv')
+    csv_val_file = os.path.join(folder_path, 'csv', 'val_loss.csv')
 
-        for i, model in enumerate(models_arr):
-            data.append(model.train_losses)
+    train_data = []
+    val_data = []
 
-        column_titles = [f'model_{i}' for i in range(len(models_arr))]
+    for i, model in enumerate(models_arr):
+        train_data.append(model.train_losses)
+        val_data.append(model.val_losses)
 
-        with open(csv_train_file_path, 'w', newline='') as csv_file:
-            csv_writer = csv.writer(csv_file)
-            csv_writer.writerow(column_titles)
-            csv_writer.writerows(zip(*data))
+    column_titles = [f'model_{i}' for i in range(len(models_arr))]
+
+    # Create the 'csv' directory if it doesn't exist
+    csv_folder_path = os.path.join(folder_path, 'csv')
+    os.makedirs(csv_folder_path, exist_ok=True)
+
+    # Save train CSV
+    with open(csv_train_file, 'w', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file)
+        csv_writer.writerow(column_titles)
+        csv_writer.writerows(zip(*train_data))
+
+    # Save val CSV
+    with open(csv_val_file, 'w', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file)
+        csv_writer.writerow(column_titles)
+        csv_writer.writerows(zip(*val_data))
+
+def load_models(folder_name):
+    folder_path = f'../data/OfflineEnsembles/{folder_name}/'
+
+    if not os.path.exists(folder_path):
+        print("ERROR: The folder " + folder_path + " doesn't exist")
+        return
     
-    if val:
-        csv_val_file_path = 'val_loss_' + path + '.csv'
-
-        data = []
-
-        for i, model in enumerate(models_arr):
-            data.append(model.val_losses)
-
-        column_titles = [f'model_{i}' for i in range(len(models_arr))]
-
-        with open(csv_val_file_path, 'w', newline='') as csv_file:
-            csv_writer = csv.writer(csv_file)
-            csv_writer.writerow(column_titles)
-            csv_writer.writerows(zip(*data))
-
-
-def print_CSV_losses(csv_file_name):
-    # Read the data from the CSV file using pandas
-    df = pd.read_csv(csv_file_name)
-
-    # Plot each column with different colors
-    colors = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'cyan']
-    for i, column in enumerate(df.columns):
-        plt.plot(df[column], label=column, color=colors[i])
-
-    # Add labels and legend
-    plt.xlabel('Index')
-    plt.ylabel('Values')
-    plt.legend()
-    plt.title('Data from CSV File')
-
-    # Show the plot
-    plt.show()
-
-def load_models(folder_path):
     # List all files in the folder
     model_files = [file for file in os.listdir(folder_path) if file.endswith('.pt')]
 
@@ -181,6 +176,64 @@ def load_models(folder_path):
         models_arr.append(model)
     
     return models_arr
+
+def plot_train_losses(folder_name):
+    folder_path = f'../data/OfflineEnsembles/{folder_name}/'
+
+    if not os.path.exists(folder_path):
+        print("ERROR: The folder " + folder_path + " doesn't exist")
+        return
+    
+    csv_file_name = os.path.join(folder_path, 'csv', 'train_loss.csv')
+
+    # Read the data from the CSV file using pandas
+    df = pd.read_csv(csv_file_name)
+
+    # Plot each column with different colors
+    colors = cycle(['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'cyan',
+                'magenta', 'teal', 'lime', 'gold', 'olive', 'navy', 'maroon', 'sienna', 'slateblue'])
+    
+    for i, column in enumerate(df.columns):
+        color=next(colors)
+        plt.plot(df[column], label=column, color=color)
+
+    # Add labels and legend
+    plt.xlabel('Index')
+    plt.ylabel('Values')
+    plt.legend()
+    plt.title('Data from CSV File')
+
+    # Show the plot
+    plt.show()
+
+def plot_val_losses(folder_name):
+    folder_path = f'../data/OfflineEnsembles/{folder_name}/'
+
+    if not os.path.exists(folder_path):
+        print("ERROR: The folder " + folder_path + " doesn't exist")
+        return
+    
+    csv_file_name = os.path.join(folder_path, 'csv', 'val_loss.csv')
+
+    # Read the data from the CSV file using pandas
+    df = pd.read_csv(csv_file_name)
+
+    # Plot each column with different colors
+    colors = cycle(['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'cyan',
+                'magenta', 'teal', 'lime', 'gold', 'olive', 'navy', 'maroon', 'sienna', 'slateblue'])
+    
+    for i, column in enumerate(df.columns):
+        color=next(colors)
+        plt.plot(df[column], label=column, color=color)
+
+    # Add labels and legend
+    plt.xlabel('Index')
+    plt.ylabel('Values')
+    plt.legend()
+    plt.title('Data from CSV File')
+
+    # Show the plot
+    plt.show()
 
 #FUNCIONES PARA CREAR SUBCONJUNTOS DE TRANSICIONES A PARTIR DE LA LISTA COMPLETA
 
@@ -219,8 +272,10 @@ def transition_generator(maze):
 
     return train_transitions, val_transitions
 
-
-def transitions_families_generator_with_validation_data(train_transitions, val_transitions, n):
+# Esta función va seleccionando un subconjunto de transiciones de forma ordenada y ciclicamente (de la 0 a la N, de la N+1 a la 2N, ...).
+# De esta manera se asegura que todas las transiciones se usan al menos una vez. Las transiciones que sobran se añaden al conjunto de validacion.
+# Al final cada sublista se completa con repeticiones de las transiciones que ya tiene como antes.
+def transitions_families_generator(train_transitions, val_transitions, n):
     n_transiciones_iniciales = len(train_transitions)
     n_subset = int(0.66 * n_transiciones_iniciales)
 
@@ -250,83 +305,6 @@ def transitions_families_generator_with_validation_data(train_transitions, val_t
         new_val_transitions.append(new_val)
 
     return new_train_transitions, new_val_transitions
-
-# Misma función que la anterior pero con un porcentaje de retención fijo del 66%
-# y que después genera el otro 33% de transiciones con repeticiones de las que ya tiene.
-# Al final tendrá el mismo numero de transiciones que la lista original
-def transitions_families_generator_WITH_REPETITION(transiciones_iniciales, n):
-    n_transiciones_iniciales = len(transiciones_iniciales)
-    n_borradas = int((1 - 0.66) * n_transiciones_iniciales)
-    
-    nuevos_arrays = []
-
-    for _ in range(n):
-        # Crear una copia de las transiciones iniciales
-        nuevas_transiciones = transiciones_iniciales.copy()
-
-        # Eliminar aleatoriamente 'n_retenidas' transiciones
-        transiciones_a_eliminar = random.sample(nuevas_transiciones, n_borradas)
-        for t in transiciones_a_eliminar:
-            nuevas_transiciones.remove(t)
-
-        # Repetir aleatoriamente 'n_borradas' transiciones
-        transiciones_a_repetir = random.sample(nuevas_transiciones, n_borradas)
-        nuevas_transiciones.extend(transiciones_a_repetir)
-
-        nuevos_arrays.append(nuevas_transiciones)
-
-    return nuevos_arrays
-
-# Esta función es casi igual que la anterior, pero en vez de eliminarlas aleatoriamente, va seleccionando un subconjunto
-# de transiciones de forma ordenada y ciclicamente (de la 0 a la N, de la N+1 a la 2N, ...). De esta manera se asegura que todas las transiciones se usan al menos una vez.
-# Al final cada sublista se completa con repeticiones de las transiciones que ya tiene como antes.
-def transitions_families_generator_FULLY_REPRESENTED(transiciones_iniciales, n):
-    n_transiciones_iniciales = len(transiciones_iniciales)
-    n_subset = int(0.66 * n_transiciones_iniciales)
-
-    nuevos_arrays = []
-
-    for i in range(n):
-
-        # Crear una copia de las transiciones iniciales
-        nuevas_transiciones = transiciones_iniciales.copy()
-        
-        start_index = (i * n_subset) % len(nuevas_transiciones)
-        end_index = (start_index + n_subset) % len(nuevas_transiciones)
-
-        if start_index < end_index:
-            nuevas_transiciones = nuevas_transiciones[start_index:end_index]
-        else:
-            nuevas_transiciones = nuevas_transiciones[start_index:] + nuevas_transiciones[:end_index]        
-
-        # Repetir aleatoriamente 'n_borradas' transiciones
-        transiciones_a_repetir = random.sample(nuevas_transiciones, n_transiciones_iniciales - n_subset)
-        nuevas_transiciones.extend(transiciones_a_repetir)
-
-        nuevos_arrays.append(nuevas_transiciones)
-
-    return nuevos_arrays
-
-#Esta función muestra un conteo de cuantas veces aparece cada transición en las sublistas.
-#De esta manera podemos asegurarnos de si las transiciones se han muestreado correctamente o no
-def count_original_transitions(all_transitions, new_transitions):
-    # Aplanar la lista de sublistas
-    flattened_new_transitions = [item for sublist in new_transitions for item in sublist]
-
-    # Inicializar un diccionario para contar las transiciones originales
-    counts = defaultdict(int)
-
-    # Contar la frecuencia de cada transición original
-    for transition in flattened_new_transitions:
-        counts[tuple(transition)] += 1
-
-    index = 1
-    # Imprimir los resultados
-    for original_transition in all_transitions:
-        count = counts.get(tuple(original_transition), 0)
-        print(f"{index} Transición: {original_transition}, Apariciones: {count}")
-        index += 1
-
 
 #FUNCION PARA MOSTRAR UNA GRÁFICA CON LAS PROBABILIDADES DE CADA ACCIÓN PARA CADA CASILLA DEL GRID
 def probMapper(grid, models, threshold = 50.0):
@@ -583,7 +561,10 @@ def stdMapper(grid, models, threshold = 0.3):
         for x in range(n_cols):
             for a in range(4):
                 #std_grid2[y][x][a] = np.linalg.norm(np.std(std_grid[y][x][a], axis=0))
-                std_grid2[y][x][a] = np.linalg.norm(np.std(std_grid[y][x][a], axis=0))
+                if std_grid[y][x][a]:
+                    std_grid2[y][x][a] = np.linalg.norm(np.std(std_grid[y][x][a], axis=0))
+                else:
+                    std_grid2[y][x][a] = 0
 
     binary_grid = np.where(np.array(empty_grid) == '#', 0, 1)
 
@@ -783,8 +764,10 @@ def stdMeanMapper(grid, models, threshold = 0.3):
     for y in range(n_rows):
         for x in range(n_cols):
             for a in range(4):
-                #std_grid2[y][x][a] = np.linalg.norm(np.std(std_grid[y][x][a], axis=0))
-                std_grid2[y][x][a] = np.linalg.norm(np.std(std_grid[y][x][a], axis=0))
+                if std_grid[y][x][a]:
+                    std_grid2[y][x][a] = np.linalg.norm(np.std(std_grid[y][x][a], axis=0))
+                else:
+                    std_grid2[y][x][a] = 0
 
     binary_grid = np.where(np.array(empty_grid) == '#', 0, 1)
 
