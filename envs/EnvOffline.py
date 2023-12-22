@@ -6,7 +6,7 @@ from gymnasium import spaces
 
 import torch
 
-from envs.NeuralNetwork import NeuralNetwork
+from envs.NeuralNetwork import OfflineNN
 
 class OfflineGridWorldEnv(gym.Env):
     def __init__(self, maze, shape, n_models, reward, render, max_steps_per_episode):
