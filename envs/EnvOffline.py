@@ -6,10 +6,14 @@ from gymnasium import spaces
 
 import torch
 
+from collections import Counter
+
 from envs.NeuralNetwork import OfflineNN
 
+from utilities.transitionDatasetGeneration import load_models, calc_uncertainty_for_state
+
 class OfflineGridWorldEnv(gym.Env):
-    def __init__(self, maze, shape, n_models, reward, render, max_steps_per_episode):
+    def __init__(self, maze, folder_name, reward, render, max_steps_per_episode):
         self.maze = np.array(maze["maze"])  # Maze represented as a 2D numpy array
         self.starting_positions = maze["starting_pos"] #list of possible starting positions
         
@@ -20,7 +24,6 @@ class OfflineGridWorldEnv(gym.Env):
         self.goal_pos = (np.concatenate(np.where(self.maze == 'G'))).astype(np.int32)  # Goal position
         
         self.num_rows, self.num_cols = self.maze.shape
-        self.shape = shape
 
         self.observation_space = spaces.Box(low=np.array([0, 0]), high=np.array([self.num_rows, self.num_cols]), dtype=np.int32)
         self.action_space = spaces.Discrete(4)
@@ -31,21 +34,14 @@ class OfflineGridWorldEnv(gym.Env):
 
         self.rewardHistory = []
 
+        self.visited_stds = {}
+
         # Load models
         print("Loading models...")
-        self.grid_models = []
-
-        for i in range(n_models):
-            if self.shape == "5x5":
-                model = NeuralNetwork(3, 2)
-            elif self.shape == "14x14":
-                model = NeuralNetwork(3, 2, 128, 64)
-
-            model.load_state_dict(torch.load("../data/OfflineEnsembleModels/{}_{}.pt".format(self.shape, i)))
-            model.eval()
-
-            self.grid_models.append(model)
-        
+        if self.num_rows == 5:
+            self.grid_models = load_models(folder_name, hidden_size=32)
+        else:
+            self.grid_models = load_models(folder_name)
         print("Models loaded")
 
         if render:
@@ -87,31 +83,20 @@ class OfflineGridWorldEnv(gym.Env):
         #No me queda muy claro pq tiene que ser un [[[]]] y si es necesario, pero si no tiene esta forma el modelo de torch protesta
         #pq podria ser mas lento
         model_input = np.array([np.column_stack(np.array([float(self._agent_location[0]), float(self._agent_location[1]), float(action)]))])
-        input_tensor = torch.tensor(model_input, dtype=torch.float32)
+        input_tensor = torch.tensor(model_input, dtype=torch.float32).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
-        posibilidades = []
+        resultados = []
 
         for model in self.grid_models:
-            #resultado = model(input_tensor)
-            #resultado = resultado.detach().numpy()
-
-            posibilidades.append([np.int32(np.round(model(input_tensor).detach().numpy()[0][0][0])), np.int32(np.round(model(input_tensor).detach().numpy()[0][0][1]))])
-         
-        probability_dict = {}
-        for p in posibilidades:
-            if not str(p) in probability_dict:
-                probability_dict[str(p)] = str(posibilidades.count(p)/len(posibilidades))
+            resultado = model(input_tensor).cpu().detach().numpy()[0][0]
+            resultados.append([np.int32(np.round(resultado[0])), np.int32(np.round(resultado[1]))])
         
-        #sort the dictionary by value from highest to lowest
-        probability_dict = {k: v for k, v in sorted(probability_dict.items(), key=lambda item: item[1], reverse=True)}
-        
-        highest_probability_state = list(probability_dict.keys())[0]
-        highest_probability_value = float(list(probability_dict.values())[0])
-
-        highest_probability_state = highest_probability_state.replace("[", "").replace("]", "").split(", ")
+        list_counts = Counter(map(tuple, resultados))
+        most_repeated_list = max(list_counts, key=list_counts.get)
 
         #create a numpy array with the highest probability state
-        new_pos = np.array([np.column_stack(np.array([np.int32(highest_probability_state[0]), np.int32(highest_probability_state[1])]))])[0][0]
+        new_pos = np.array([np.column_stack(np.array([np.int32(most_repeated_list[0]), np.int32(most_repeated_list[1])]))])[0][0]
+
         old_pos = self._agent_location
 
         # Check if the new position is valid
@@ -121,21 +106,28 @@ class OfflineGridWorldEnv(gym.Env):
         # An episode is done if the agent has reached the target
         terminated = np.array_equal(self._agent_location, self._target_location)
 
-
         #AQUI HAY QUE TENER CUIDADO PQ SI LLEGA A LA META A TRAVES DE UNA TRANSICION CON PROBABILIDAD MENOR QUE EL UMBRAL,
         #TIENE PRIORIDAD LA RECOMPENSA DE LLEGAR A LA META SOBRE LA PENALIZACION
+        agent_location_key = tuple(self._agent_location)
+
+        if agent_location_key in self.visited_stds:
+            std = self.visited_stds[agent_location_key]
+        else:
+            std = calc_uncertainty_for_state(self.grid_models, self._agent_location)
+            self.visited_stds[agent_location_key] = std  
+
+        truncated = False
 
         if terminated:
             reward = self.reward
         else:
-            if self.penalty != 0:
-                if highest_probability_value < self.penalty_threshold:
-                    reward = self.penalty
-                    self.rewardHistory.append([old_pos, action, new_pos])
-                else:
-                    reward = 0
+            if std >= self.penalty_threshold:
+                reward = self.penalty
+                self.rewardHistory.append([old_pos, action, new_pos])
+                #truncated = True
             else:
                 reward = 0
+
         
         #print("New position is: {}".format(self._agent_location))
         #print("Reward is: {}".format(reward))

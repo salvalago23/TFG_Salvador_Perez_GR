@@ -144,7 +144,7 @@ def store_models(models_arr, folder_name):
         csv_writer.writerow(column_titles)
         csv_writer.writerows(zip(*val_data))
 
-def load_models(folder_name):
+def load_models(folder_name, hidden_size=512):
     folder_path = f'../data/OfflineEnsembles/{folder_name}/'
 
     if not os.path.exists(folder_path):
@@ -163,7 +163,7 @@ def load_models(folder_name):
         print('Loading model:', model_file)
 
         # Create an instance of your model
-        model = OfflineNN(hidden_size=512)
+        model = OfflineNN(hidden_size)
         
         # Load the weights
         model.load_state_dict(torch.load(os.path.join(folder_path, model_file)))
@@ -511,7 +511,6 @@ def stdMapper(grid, models, threshold = 0.3):
     empty_grid = [['' for i in range(len(grid[0]))] for j in range(len(grid))]
     #std grid should be an [n_rows][n_cols][4] array
     std_grid = [[[[] for i in range(4)] for j in range(len(grid[0]))] for k in range(len(grid))]
-    std_grid2 = [[[[] for i in range(4)] for j in range(len(grid[0]))] for k in range(len(grid))]
 
     n_rows, n_cols = len(grid), len(grid[0])
 
@@ -532,39 +531,6 @@ def stdMapper(grid, models, threshold = 0.3):
                             resultado = resultado.cpu().detach().numpy()
                             posibilidades.append([round(resultado[0][0]), round(resultado[0][1])])
                             std_grid[y][x][i].append(resultado[0])
-
-                        #Calculo el porcentaje de veces que aparece cada posibilidad
-                        probability_dict = {str(posibilidades.count(p)/len(posibilidades)*100) + "%": p for p in posibilidades}
-
-                        probability_dict = {}
-                        for p in posibilidades:
-                            if not str(p) in probability_dict:
-                                probability_dict[str(p)] = str(posibilidades.count(p)/len(posibilidades))
-
-                        #Ordeno el diccionario por las probabilidades de mayor a menor
-                        probability_dict = {k: v for k, v in sorted(probability_dict.items(), key=lambda item: item[1], reverse=True)}
-                        
-                        highest_probability = list(probability_dict.keys())[0]
-
-                        #convertirla de nuevo a lista
-                        highest_probability = highest_probability.replace("[", "").replace("]", "").split(", ")
-
-                        highest_probability = [highest_probability[0], highest_probability[1]]
-
-
-                        for p in probability_dict:
-                            empty_grid[y][x] = empty_grid[y][x] + str(p) + ": "+ str(round(float(probability_dict[p])*100, 2))+"% "
-                            break #I only need the first one
-                        #print("Probabilidad " + str(p) + ": " + str(posibilidades.count(p)/len(posibilidades)*100) + "%")
-    
-    for y in range(n_rows):
-        for x in range(n_cols):
-            for a in range(4):
-                #std_grid2[y][x][a] = np.linalg.norm(np.std(std_grid[y][x][a], axis=0))
-                if std_grid[y][x][a]:
-                    std_grid2[y][x][a] = np.linalg.norm(np.std(std_grid[y][x][a], axis=0))
-                else:
-                    std_grid2[y][x][a] = 0
 
     binary_grid = np.where(np.array(empty_grid) == '#', 0, 1)
 
@@ -593,68 +559,10 @@ def stdMapper(grid, models, threshold = 0.3):
                 plt.plot([j - 0.5, j + 0.5], [i - 0.5, i + 0.5], color='black', linewidth=1)
                 plt.plot([j + 0.5, j - 0.5], [i - 0.5, i + 0.5], color='black', linewidth=1)
 
-                text = empty_grid[i][j].split("%")
-                text1state = text[0].split(":")[0].replace(" ", "")
-
                 text1prob = round(np.linalg.norm(np.std(std_grid[i][j][0], axis=0)), 3)
-
-                text2state = text[1].split(":")[0].replace(" ", "")
-
                 text2prob = round(np.linalg.norm(np.std(std_grid[i][j][1], axis=0)), 3)
-
-                text3state = text[2].split(":")[0].replace(" ", "")
-
                 text3prob = round(np.linalg.norm(np.std(std_grid[i][j][2], axis=0)), 3)
-
-                text4state = text[3].split(":")[0].replace(" ", "")
-
                 text4prob = round(np.linalg.norm(np.std(std_grid[i][j][3], axis=0)), 3)
-
-                for a in range(4):
-
-                    if a == 0:  # Mover hacia el norte
-                        if binary_grid[max(0, i - 1), j] == 0:
-                            y1, x1 = i, j
-                        else:
-                            y1, x1 = max(0, i - 1), j
-
-                        if y1 != int(text1state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text1state.replace("[", "").replace("]", "").split(",")[1]):
-                            color1state = 'orange'
-                        else:
-                            color1state = 'green'
-                    
-                    elif a == 1:  # Mover hacia el sur
-                        if binary_grid[min(n_rows - 1, i + 1), j] == 0:
-                            y1, x1 = i, j
-                        else:
-                            y1, x1 = min(n_rows - 1, i + 1), j
-
-                        if y1 != int(text2state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text2state.replace("[", "").replace("]", "").split(",")[1]):
-                            color2state = 'orange'
-                        else:
-                            color2state = 'green'
-                    
-                    elif a == 2:  # Mover hacia el oeste
-                        if binary_grid[i, max(0, j - 1)] == 0:
-                            y1, x1 = i, j
-                        else:
-                            y1, x1 = i, max(0, j - 1)
-                        
-                        if y1 != int(text3state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text3state.replace("[", "").replace("]", "").split(",")[1]):
-                            color3state = 'orange'
-                        else:
-                            color3state = 'green'
-                    
-                    elif a == 3:  # Mover hacia el este
-                        if binary_grid[i, min(n_cols - 1, j + 1)] == 0:
-                            y1, x1 = i, j
-                        else:
-                            y1, x1 = i, min(n_cols - 1, j + 1)
-                        
-                        if y1 != int(text4state.replace("[", "").replace("]", "").split(",")[0]) or x1 != int(text4state.replace("[", "").replace("]", "").split(",")[1]):
-                            color4state = 'orange'
-                        else:
-                            color4state = 'green'
 
                 # Add text based on the sector
                 if np.linalg.norm(np.std(std_grid[i][j][0], axis=0)) <= threshold:
@@ -677,16 +585,9 @@ def stdMapper(grid, models, threshold = 0.3):
                 else:
                     color4prob = 'red'
 
-                plt.text(j, i - .4, text1state, ha='center', va='center', fontsize=fontsize1, color=color1state)  # North
                 plt.text(j, i - .25, text1prob, ha='center', va='center', fontsize=fontsize1, color=color1prob)  # North
-
-                plt.text(j, i + .25, text2state, ha='center', va='center', fontsize=fontsize1, color=color2state)  # South
                 plt.text(j, i + .4, text2prob, ha='center', va='center', fontsize=fontsize1, color=color2prob)  # South
-
-                plt.text(j - .3, i - .1, text3state, ha='center', va='center', fontsize=fontsize1, color=color3state)  # West
                 plt.text(j - .3, i + .05, text3prob, ha='center', va='center', fontsize=fontsize1, color=color3prob)  # West
-
-                plt.text(j + .3, i - .1, text4state, ha='center', va='center', fontsize=fontsize1, color=color4state)  # East
                 plt.text(j + .3, i + .05, text4prob, ha='center', va='center', fontsize=fontsize1, color=color4prob)  # East
             
             else:
@@ -714,8 +615,7 @@ def stdMeanMapper(grid, models, threshold = 0.3):
 
     empty_grid = [['' for i in range(len(grid[0]))] for j in range(len(grid))]
     #std grid should be an [n_rows][n_cols][4] array
-    std_grid = [[[[] for i in range(4)] for j in range(len(grid[0]))] for k in range(len(grid))]
-    std_grid2 = [[[[] for i in range(4)] for j in range(len(grid[0]))] for k in range(len(grid))]
+    std_grid = [['' for j in range(len(grid[0]))] for k in range(len(grid))]
 
     n_rows, n_cols = len(grid), len(grid[0])
 
@@ -726,48 +626,19 @@ def stdMeanMapper(grid, models, threshold = 0.3):
                 if grid[y][x] == "#":
                     empty_grid[y][x] = "#" 
                 else:
-                    for i in range(4):
-                        posibilidades = []
+                    
+                    stds = []
 
+                    for i in range(4):
+                        predictions = []
                         test_input = torch.tensor([[float(y), float(x), float(i)]], dtype=torch.float32).to(device)
-                        
+    
                         for m in range(len(models)):
                             resultado = models[m](test_input)
                             resultado = resultado.cpu().detach().numpy()
-                            posibilidades.append([round(resultado[0][0]), round(resultado[0][1])])
-                            std_grid[y][x][i].append(resultado[0])
-
-                        #Calculo el porcentaje de veces que aparece cada posibilidad
-                        probability_dict = {str(posibilidades.count(p)/len(posibilidades)*100) + "%": p for p in posibilidades}
-
-                        probability_dict = {}
-                        for p in posibilidades:
-                            if not str(p) in probability_dict:
-                                probability_dict[str(p)] = str(posibilidades.count(p)/len(posibilidades))
-
-                        #Ordeno el diccionario por las probabilidades de mayor a menor
-                        probability_dict = {k: v for k, v in sorted(probability_dict.items(), key=lambda item: item[1], reverse=True)}
-                        
-                        highest_probability = list(probability_dict.keys())[0]
-
-                        #convertirla de nuevo a lista
-                        highest_probability = highest_probability.replace("[", "").replace("]", "").split(", ")
-
-                        highest_probability = [highest_probability[0], highest_probability[1]]
-
-
-                        for p in probability_dict:
-                            empty_grid[y][x] = empty_grid[y][x] + str(p) + ": "+ str(round(float(probability_dict[p])*100, 2))+"% "
-                            break #I only need the first one
-                        #print("Probabilidad " + str(p) + ": " + str(posibilidades.count(p)/len(posibilidades)*100) + "%")
-    
-    for y in range(n_rows):
-        for x in range(n_cols):
-            for a in range(4):
-                if std_grid[y][x][a]:
-                    std_grid2[y][x][a] = np.linalg.norm(np.std(std_grid[y][x][a], axis=0))
-                else:
-                    std_grid2[y][x][a] = 0
+                            predictions.append([resultado[0][0], resultado[0][1]])
+                        stds.append(np.linalg.norm(np.std(predictions, axis=0)))
+                    std_grid[y][x] = round(np.mean(stds), 3)
 
     binary_grid = np.where(np.array(empty_grid) == '#', 0, 1)
 
@@ -793,21 +664,17 @@ def stdMeanMapper(grid, models, threshold = 0.3):
         for j in range(len(binary_grid[0])):
 
             if binary_grid[i, j] == 1:  # Check if the cell is white
-                text1prob = round(np.linalg.norm(np.std(std_grid[i][j][0], axis=0)), 3)
-                text2prob = round(np.linalg.norm(np.std(std_grid[i][j][1], axis=0)), 3)
-                text3prob = round(np.linalg.norm(np.std(std_grid[i][j][2], axis=0)), 3)
-                text4prob = round(np.linalg.norm(np.std(std_grid[i][j][3], axis=0)), 3)
 
-                textprob = round(np.mean([text1prob, text2prob, text3prob, text4prob]), 3)
+                mean_text = std_grid[i][j]
 
-                if textprob <= threshold:
-                    colortextprob = "green"
+                # Add text based on the sector
+                if mean_text <= threshold:
+                    color = 'green'
                 else:
-                    colortextprob = "red"
+                    color = 'red'
 
-                plt.text(j, i, textprob, ha='center', va='center', fontsize=fontsize1, color=colortextprob)
+                plt.text(j, i, mean_text, ha='center', va='center', fontsize=fontsize1, color=color)  # North
 
-            
             else:
                 plt.text(j, i, '[' + str(i) + ',' + str(j) + ']', ha='center', va='center', fontsize=fontsize2, color='white')
 
@@ -821,6 +688,20 @@ def stdMeanMapper(grid, models, threshold = 0.3):
 
     plt.show()
 
+def calc_uncertainty_for_state(models_arr, state):
+    with torch.no_grad():
+
+        stds = []
+
+        for a in range(4):
+            predictions = []
+            test_input = torch.tensor([[float(state[0]), float(state[1]), float(a)]], dtype=torch.float32).to(device)
+            for model in models_arr:
+                resultado = model(test_input).cpu().detach().numpy()
+                predictions.append([resultado[0][0], resultado[0][1]])
+            stds.append(np.linalg.norm(np.std(predictions, axis=0)))
+
+    return round(np.mean(stds), 3)
 
 #FUNCION PARA TESTEAR LOS MODELOS ENTRENADOS
 #For a given state, predict the output for each action from the 9 models through polling.

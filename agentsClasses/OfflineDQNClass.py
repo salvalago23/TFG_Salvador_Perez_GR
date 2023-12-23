@@ -42,8 +42,8 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class OfflineDQNAgent():
     """Interacts with and learns form environment."""
-    def __init__(self, id, algorithm, shape, fc1_unit, fc2_unit, n_models, n_episodes, max_steps, reward, initial_eps, final_eps, eps_decay, buffer_size, batch_size, gamma, tau, lr, update_every):
-        """Initialize an Agent object.
+    def __init__(self, id, algorithm, shape, folder_name, fc1_unit, fc2_unit, n_episodes, max_steps, reward, initial_eps, final_eps, eps_decay, buffer_size, batch_size, gamma, tau, lr, update_every):
+        """Initialize an Agent object
         Params
         =======
             id (int): id of the agent
@@ -66,7 +66,7 @@ class OfflineDQNAgent():
         self.algorithm = algorithm
 
         self.shape = shape
-        self.env = createOfflineEnv(shape, n_models, reward, id=id, max_steps=max_steps)
+        self.env = createOfflineEnv(shape, folder_name, reward, id=id, max_steps=max_steps)
         #self.env.unwrapped.randomize_start_pos()
         
         self.state_size = self.env.observation_space.shape[0]
@@ -209,14 +209,9 @@ class OfflineDQNAgent():
                 ## above step decides whether we will train(learn) the network actor (local_qnetwork) or we will fill the replay buffer
                 ## if len replay buffer is equal to the batch size then we will train the network or otherwise we will add experience tuple in our replay buffer.
                 state = next_state
-            
-            self.epsilon = max(self.final_epsilon, self.epsilon*self.epsilon_decay)## decrease the epsilon
 
-            #eps = max(self.eps_end, eps-self.eps_decay)
-
-        # save the model weights
-        #torch.save(self.qnetwork_local.state_dict(), self.path_to_save)
-
+            self.epsilon = max(self.final_epsilon, self.epsilon - self.epsilon_decay)
+            #self.epsilon = max(self.final_epsilon, self.epsilon*self.epsilon_decay)## decrease the epsilon
 
     def plot_results(self, rolling_length=1, rolling_error=1):
         print("Agent", self.id+1, "steps stats:", "\n  -Average:", round(np.mean(self.env.length_queue), 2), "\n  -Std dev:", round(np.std(self.env.length_queue), 2), "\n   -Median:", int(np.median(self.env.length_queue)), "\n     -Best:", np.min(self.env.length_queue))

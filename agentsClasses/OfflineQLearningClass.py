@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from envs.CreateEnvs import createOfflineEnv
 
 class OfflineQLearningAgent:
-    def __init__(self, id, shape, n_models, n_episodes, max_steps, reward, learning_rate, start_epsilon, epsilon_decay, final_epsilon, discount_factor):
+    def __init__(self, id, shape, folder_name, n_episodes, max_steps, reward, learning_rate, start_epsilon, epsilon_decay, final_epsilon, discount_factor):
         """Initialize a Reinforcement Learning agent with an empty dictionary
         of state-action values (q_values), a learning rate and an epsilon.
         Args:
@@ -20,8 +20,7 @@ class OfflineQLearningAgent:
         self.id = id
         self.algorithm = "Q-Learning"
 
-        self.shape = shape
-        self.env = createOfflineEnv(shape, n_models, reward, id=id, max_steps=max_steps)
+        self.env = createOfflineEnv(shape, folder_name, reward, id=id, max_steps=max_steps)
         #self.env.unwrapped.randomize_start_pos()
 
         self.q_values = defaultdict(lambda: np.zeros(self.env.action_space.n))
