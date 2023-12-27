@@ -210,8 +210,8 @@ class OfflineDQNAgent():
                 ## if len replay buffer is equal to the batch size then we will train the network or otherwise we will add experience tuple in our replay buffer.
                 state = next_state
 
-            self.epsilon = max(self.final_epsilon, self.epsilon - self.epsilon_decay)
-            #self.epsilon = max(self.final_epsilon, self.epsilon*self.epsilon_decay)## decrease the epsilon
+            #self.epsilon = max(self.final_epsilon, self.epsilon - self.epsilon_decay)
+            self.epsilon = max(self.final_epsilon, self.epsilon*self.epsilon_decay)## decrease the epsilon
 
     def plot_results(self, rolling_length=1, rolling_error=1):
         print("Agent", self.id+1, "steps stats:", "\n  -Average:", round(np.mean(self.env.length_queue), 2), "\n  -Std dev:", round(np.std(self.env.length_queue), 2), "\n   -Median:", int(np.median(self.env.length_queue)), "\n     -Best:", np.min(self.env.length_queue))
