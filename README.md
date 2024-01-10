@@ -1,58 +1,47 @@
-#Hay que borrar de data OfflineModels el de 9 y los 3 mode
-
-# Proyecto de RL Offline basado en modelo con gestión de incertidumbre
-# by Salvador Pérez Lago
+# Proyecto de RL Offline basado en modelo con gestión de incertidumbre by Salvador Pérez Lago
 
 Todo el código necesario para replicar los experimentos de este TFG están incluídos en las carpetas ./src/ y ./src2/, que contienen dos flujos de trabajo totalmente independientes. 
 
-La carpeta ./src/ se corresponde con el primer enfoque del proyecto
+Para instalar las librerías necesarias basta con instalar el contenido del 'requirements.txt' con el comando "pip install -r requirements.txt" desde la terminal. Es recomendable crear un entorno virtual de 0 para realizar la instalación evitando problemas de incompatibilidad entre otras versiones de las librerías.
 
-## Carpetas
+A continuación se describirá brevemente el contenido de cada una de las carpetas que componen el proyecto:
 
-### _discarded
+## _discarded
 Contiene pruebas fallidas en las que se intentaron usar librerías de RL previamente existentes, además de una primera versión del proyecto que estaba implementando en TensorFlow, antes de decidir migrar todo a PyTorch.
 
 
-### agentsClasses
+## agentsClasses
 Aquí están definidas las clases de los agentes DQN y DDQN (en DQNClass.py) y los Q-Learning (QLearningClass.py). También están las versiones de esas clases pero para interactuar con el entorno offline (OfflineDQNClass.py y OfflineQLearningClass.py).
 
 
-### data
-#### csv
+## data
+### csv
 Contiene los dataset de las transiciones (generados con el primer entorno en ./src/1_CSVGeneration.ipynb) de cada uno de los dos mapas que existen, antes (history5x5.csv y history14x14.csv) y después (new5x5.csv y new14x14.csv) de eliminar aquellas transiciones que se repitan más de un número X de veces.
 
-#### EnvNNModels
+### EnvNNModels
 Con los dataset de los csv se generan 2 modelos, un modelo de la dinámica del entorno y otro de la función de recompensa, para cada uno de los 2 mapas. En total son 4 redes PyTorch que se guardan en esta carpeta.
 
-#### json
+### json
 Aquí se guardan en formato json la información de los agentes QLearning, DQN y DDQN de los 2 mapas, entrenados en ./src/4_1_QLearning.ipynb, ./src/4_2_QLearningV2.ipynb, ./src/5_1_DQNTrain.ipynb y ./src/5_2_DQNTrainV2.ipynb
 
-Se guardan los siguientes datos de cada agente:
--ID
--Episodios de entrenamiento
--Máx. número de pasos por episodio
--Algoritmo usado (QL, DQN o DDQN)
--Tamaño del grid (5x5 o 14x14)
--Coordenadas de la casilla inicial
--Política entrenada
--Tabla de valores de cada estado
+Se guardan los siguientes datos de cada agente: ID, Episodios de entrenamiento, Máx. número de pasos por episodio, Algoritmo usado (QL, DQN o DDQN), Tamaño del grid (5x5 o 14x14), Coordenadas de la casilla inicial, Política entrenada, Tabla de valores de cada estado
 
-#### OfflineEnsembles
+### OfflineEnsembles
 Carpetas que contienen los ensembles de modelos para la predicción de la incertidumbre en los 2 mapas. Las carpetas "csv" dentro de las carpetas que contienen los modelos, guardan ficheros en formato csv con la información de la evolución de la pérdida de validación y de entrenamiento durante la fase de entrenamiento de los modelos.
 
-#### txt
+### txt
 ficheros txt para debuguear más fácilmente los resultados de las predicciones de los ensembles online.
 
 
-### envs
+## envs
 
 
 
-### img
+## img
 Contiene imágenes resultantes de algunos de los experimentos (gráficas de entrenamientos de agentes, modelos de entorno, políticas de comportamiento de agentes...)
 
 
-### src
+## src
 
 
 
