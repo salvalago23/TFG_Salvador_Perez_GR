@@ -30,11 +30,11 @@ Se guardan los siguientes datos de cada agente: ID, Episodios de entrenamiento, 
 Carpetas que contienen los ensembles de modelos para la predicción de la incertidumbre en los 2 mapas. Las carpetas "csv" dentro de las carpetas que contienen los modelos, guardan ficheros en formato csv con la información de la evolución de la pérdida de validación y de entrenamiento durante la fase de entrenamiento de los modelos.
 
 ### txt
-ficheros txt para debuguear más fácilmente los resultados de las predicciones de los ensembles online.
+Ficheros txt para debuguear más fácilmente los resultados de las predicciones de los ensembles online.
 
 
 ## envs
-
+Estos códigos contienen el entorno original SimpleGrid (EnvCSV.py), el que usa redes neuronales para modelar la dinámica del entorno y la función de recompensa (EnvNN.py) y el que usa como modelo el ensemble offline de redes neuronales (EnvOffline.py). También se incluye un fichero donde están definidos como arrays de arrays de caracteres los mapas (GridMaps.py), otro que permite instanciar entornos usando alguno de esos mapas (CreateEnvs.py) y por último un fichero que contiene diferentes las diferentes arquitecturas de redes neuronales usadas en el proyecto (NeuralNetworks.py).
 
 
 ## img
@@ -42,14 +42,51 @@ Contiene imágenes resultantes de algunos de los experimentos (gráficas de entr
 
 
 ## src
+Esta carpeta contiene los notebooks con los experimentos correspondientes con el primer enfoque del proyecto. Están ordenados alfabéticamente siguiendo el mismo orden secuencial con el que fueron creados y que debería seguir el proceso en caso de querer replicar los experimentos. A continuación se explicará el contenido de cada notebook:
+
+### 1_CSVGeneration
+En este archivo, haciendo uso del entorno de ./envs/EnvCSV.py se generan los dataset en formato csv con los que se entrenarán las redes neuronales para modelar la dinámica y la función de recompensa del entorno.
+
+### 2_NNModelsTrain
+Aquí se entrenan las redes neuronales haciendo uso de los csv creados por el anterior notebook, para poder crear el entorno de ./envs/EnvNN.py
+
+### 3_NNRun
+Aquí se puede comprobar que el entorno implementado con las redes neuronales funciona correctamente.
+
+### 4_1QLearning y 4_2_QLearningV2
+Programas para entrenar agentes de QLearning que sean capaces de resolver el problema de ir desde el Inicio a la Meta usando el entorno ./envs/EnvNN.py, de forma que se obtengan trayectorias que puedan usarse como "demostradores". La estructura del 4_2 es algo distinta a la de 4_1, para permitir entrenar muchos más agentes de cada vez y con distintas características de número de episodios y máximo número de pasos por episodio. Los resultados se guardan en los ficheros json de ./data/json/
+
+### 5_1_DQNTrain y 5_2_DQNTrainV2
+Lo mismo que los notebooks del punto anterior, pero para agentes DQN y DDQN.
+
+### 6_JsonManagement
+Este programa permite visualizar y modificar la información de los json creados en los notebooks previos.
+
+### 7_OfflinesFamiliesModels
+En este notebook me di cuenta de que el enfoque que estaba usando no me iba a dar resultados congruentes, por lo que decidí abandonarlo y pasar al enfoque de ./src2/
+Como en cada mapa existe una serie de casillas de inicio definidas, entre las que se escoge una de ellas de forma aleatoria cada vez que se instancia el entorno, la idea era juntar los demostradores en grupos según su casilla de inicio. Así, con las trayectorias de cada grupo se generaría un modelo, y al juntar todos se podría obtener un modelo global que permitiese a otro agente resolver de cero el problema de llegar del Inicio a la Meta.
 
 
+## src2
+Esta carpeta se corresponde con el primer enfoque del proyecto
 
-### src2
+### 1_OfflineEnsemblesGenerator
+En este archivo, haciendo uso del entorno de ./envs/EnvCSV.py se generan los dataset en formato csv con los que se entrenarán las redes neuronales para modelar la dinámica y la función de recompensa del entorno.
+
+### 2_Experiments
+Aquí se entrenan las redes neuronales haciendo uso de los csv creados por el anterior notebook, para poder crear el entorno de ./envs/EnvNN.py
+
+### 3_Visualization
+Aquí se puede comprobar que el entorno implementado con las redes neuronales funciona correctamente.
+
+### 4_OfflineQLearning
+Programas para entrenar agentes de QLearning que sean capaces de resolver el problema de ir desde el Inicio a la Meta usando el entorno ./envs/EnvNN.py, de forma que se obtengan trayectorias que puedan usarse como "demostradores". La estructura del 4_2 es algo distinta a la de 4_1, para permitir entrenar muchos más agentes de cada vez y con distintas características de número de episodios y máximo número de pasos por episodio. Los resultados se guardan en los ficheros json de ./data/json/
+
+### 5_OfflineDQNTrain
+Lo mismo que los notebooks del punto anterior, pero para agentes DQN y DDQN.
 
 
-
-### utilities
+## utilities
 Programas que contienen funciones auxiliares para el resto:
 -jsonRW.py: contiene funciones que permiten acceder y visualizar, así como editar la información contenidas en los archivos json de ./data/json/ desde el programa ./src/6_JsonManagement.ipynb
 
