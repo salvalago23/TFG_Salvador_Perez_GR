@@ -68,23 +68,19 @@ Como en cada mapa existe una serie de casillas de inicio definidas, entre las qu
 
 
 ## src2
-Esta carpeta se corresponde con el primer enfoque del proyecto
+Esta carpeta se corresponde con el enfoque final del proyecto y, como la anterior, sus notebooks también están ordenados secuencialmente. A continuación, una breve explicación de cada uno:
 
 ### 1_OfflineEnsemblesGenerator
-En este archivo, haciendo uso del entorno de ./envs/EnvCSV.py se generan los dataset en formato csv con los que se entrenarán las redes neuronales para modelar la dinámica y la función de recompensa del entorno.
+En este notebook, a partir de los mapas definidos en ./envs/GridMaps como arrays de arrays de caracteres, se generan todas las transiciones posibles. La clave es que podemos elegir casillas, en las que pondremos el caracter 'x', para que sean casillas no demostradas. Con esas transiciones, el dataset "D", se crean los modelos offline, un ensemble de modelos (inicializados con distinto seed, i.e. distinto vector de parámetros o pesos iniciales). Haciendo uso de estos ensembles en EnvOffline.py obtenemos un entorno en el que seremos capaces de discernir la incertidumbre entre los distintos estados, de manera que, aquellos que no habían sido incluídos en el dataset (los no demostrados 'x') tengan una incertidumbre mucho mayor que los que si. Así, penalizandolos cuando lleguen a estos estados, podremos entrenar agentes que consigan resolver el entorno mediante rutas que eviten pasar por ninguno de los estados no demostrados.
 
 ### 2_Experiments
-Aquí se entrenan las redes neuronales haciendo uso de los csv creados por el anterior notebook, para poder crear el entorno de ./envs/EnvNN.py
+Aquí se realizan una serie de pruebas descritas en la memoria para probar a aplicar distintas técnicas (basadas en el bagging) sobre el dataset generado anteriormente, y ver como afectaría a la eficacia de los ensembles generados con cada una.
 
 ### 3_Visualization
-Aquí se puede comprobar que el entorno implementado con las redes neuronales funciona correctamente.
+Con este notebook se pueden ver las gráficas de las pérdidas, tanto de validación como de entrenamiento, de los modelos que componen los ensembles durante su fase de entrenamiento. También se pueden ver los resultados de incertidumbre que nos dan los ensembles para cada casilla (y, si se quiere, para cada acción en cada una de ellas por separado) del grid gráficamente.
 
-### 4_OfflineQLearning
-Programas para entrenar agentes de QLearning que sean capaces de resolver el problema de ir desde el Inicio a la Meta usando el entorno ./envs/EnvNN.py, de forma que se obtengan trayectorias que puedan usarse como "demostradores". La estructura del 4_2 es algo distinta a la de 4_1, para permitir entrenar muchos más agentes de cada vez y con distintas características de número de episodios y máximo número de pasos por episodio. Los resultados se guardan en los ficheros json de ./data/json/
-
-### 5_OfflineDQNTrain
-Lo mismo que los notebooks del punto anterior, pero para agentes DQN y DDQN.
-
+### 4_OfflineQLearning y 5_OfflineDQNTrain
+Haciendo uso de los ensembles para modelar el entorno desde EnvOffline.py, podemos conseguir que agentes resuelvan el entorno ¡¡evitando las casillas no demostradas!!, tanto con QLearning como con DQN o DDQN, para los dos mapas.
 
 ## utilities
 Programas que contienen funciones auxiliares para el resto:
