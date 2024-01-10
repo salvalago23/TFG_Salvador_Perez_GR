@@ -3,12 +3,19 @@
 # Proyecto de RL Offline basado en modelo con gestión de incertidumbre
 # by Salvador Pérez Lago
 
+Todo el código necesario para replicar los experimentos de este TFG están incluídos en las carpetas ./src/ y ./src2/, que contienen dos flujos de trabajo totalmente independientes. 
+
+La carpeta ./src/ se corresponde con el primer enfoque del proyecto
+
 ## Carpetas
+
 ### _discarded
 Contiene pruebas fallidas en las que se intentaron usar librerías de RL previamente existentes, además de una primera versión del proyecto que estaba implementando en TensorFlow, antes de decidir migrar todo a PyTorch.
 
+
 ### agentsClasses
 Aquí están definidas las clases de los agentes DQN y DDQN (en DQNClass.py) y los Q-Learning (QLearningClass.py). También están las versiones de esas clases pero para interactuar con el entorno offline (OfflineDQNClass.py y OfflineQLearningClass.py).
+
 
 ### data
 #### csv
@@ -39,5 +46,24 @@ ficheros txt para debuguear más fácilmente los resultados de las predicciones 
 
 ### envs
 
+
+
 ### img
 Contiene imágenes resultantes de algunos de los experimentos (gráficas de entrenamientos de agentes, modelos de entorno, políticas de comportamiento de agentes...)
+
+
+### src
+
+
+
+### src2
+
+
+
+### utilities
+Programas que contienen funciones auxiliares para el resto:
+-jsonRW.py: contiene funciones que permiten acceder y visualizar, así como editar la información contenidas en los archivos json de ./data/json/ desde el programa ./src/6_JsonManagement.ipynb
+
+-plots.py: funciones para plotear las políticas y trayectorias de los agentes entrenados en los programas ./src/4_1_QLearning.ipynb, ./src/4_2_QLearningV2.ipynb, ./src/5_1_DQNTrain.ipynb y ./src/5_2_DQNTrainV2.ipynb
+
+-transitionDatasetGeneration.py: a pesar de su nombre, además de contener funciones para generar los dataset para crear los modelos del entorno offline, también incluyen todo tipo de funciones auxiliares usadas en todos los programas de ./src2, como pueden ser la clase para el entrenamiento de los ensembles de modelos o las funciones que permiten visualizar el mapa completo con la incertidumbre de cada estado.
