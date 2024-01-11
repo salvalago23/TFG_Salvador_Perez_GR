@@ -34,8 +34,11 @@ Ficheros txt para debuguear más fácilmente los resultados de las predicciones 
 
 
 ## envs
-Estos códigos contienen el entorno original SimpleGrid (EnvCSV.py), el que usa redes neuronales para modelar la dinámica del entorno y la función de recompensa (EnvNN.py) y el que usa como modelo el ensemble offline de redes neuronales (EnvOffline.py). También se incluye un fichero donde están definidos como arrays de arrays de caracteres los mapas (GridMaps.py), otro que permite instanciar entornos usando alguno de esos mapas (CreateEnvs.py) y por último un fichero que contiene diferentes las diferentes arquitecturas de redes neuronales usadas en el proyecto (NeuralNetworks.py).
+Estos códigos contienen el entorno original SimpleGrid (\textit{EnvCSV.py}), el que usa redes neuronales para modelar la dinámica del entorno y la función de recompensa (\textit{EnvNN.py}) y el que usa como modelo el ensemble offline de redes neuronales (\textit{EnvOffline.py}).
 
+En el fichero \textit{GridMaps.py} es donde están definidos como arrays de arrays de caracteres los mapas de los grids. Se pueden añadir o quitar fácilmente casillas no demostradas (aquellas que contienen un caracter 'x') para realizar experimentos, cambiar la configuración de los muros o la posición de las casillas de \textit{Inicio} o \textit{Meta}. También existe la posibilidad de crear otros nuevos mapas con distintas dimensiones.
+
+Por último, hay un archivo que permite contiene las funciones que permiten instanciar los entornos usando los mapas (\textit{CreateEnvs.py}) y otro que contiene diferentes las diferentes arquitecturas de redes neuronales usadas a lo largo del proyecto (\textit{NeuralNetworks.py}).
 
 ## img
 Contiene imágenes resultantes de algunos de los experimentos (gráficas de entrenamientos de agentes, modelos de entorno, políticas de comportamiento de agentes...)
