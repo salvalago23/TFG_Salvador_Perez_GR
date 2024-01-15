@@ -1,5 +1,13 @@
 # Proyecto de RL Offline basado en modelo con gestión de incertidumbre by Salvador Pérez Lago
 
+[id]: https://github.com/salvalago23/proyectoNN_salva  "Github"
+[id2]: https://nubeusc-my.sharepoint.com/:f:/g/personal/salvador_perez_rai_usc_es/EmeTyvYVMS9OuyLWuvRf_eEBgIDsb3z1ewkRNZnxxQTSCw?e=OHTvFn  "OneDrive"
+
+Todo el código y los modelos pueden ser descargados desde este repositorio de [Github][id] o bien desde [OneDrive][id2].
+This is  reference-style link.
+
+Los programas principales replicar los experimentos de este TFG están incluídos en las carpetas ./src/ y ./src2/, que contienen dos flujos de trabajo totalmente independientes. 
+
 Todo el código necesario para replicar los experimentos de este TFG están incluídos en las carpetas ./src/ y ./src2/, que contienen dos flujos de trabajo totalmente independientes. 
 
 Para instalar las librerías necesarias basta con instalar el contenido del 'requirements.txt' con el comando "pip install -r requirements.txt" desde la terminal. Es recomendable crear un entorno virtual de 0 para realizar la instalación evitando problemas de incompatibilidad entre otras versiones de las librerías.

@@ -638,18 +638,18 @@ def stdMeanMapper(grid, models, threshold = 0.3):
                             resultado = resultado.cpu().detach().numpy()
                             predictions.append([resultado[0][0], resultado[0][1]])
                         stds.append(np.linalg.norm(np.std(predictions, axis=0)))
-                    std_grid[y][x] = round(np.mean(stds), 3)
+                    std_grid[y][x] = round(np.mean(stds), 2)
 
     binary_grid = np.where(np.array(empty_grid) == '#', 0, 1)
 
     if shape == "5x5":
         plt.figure(figsize=(8, 8))
-        fontsize1 = 8
-        fontsize2 = 10
+        fontsize1 = 20
+        fontsize2 = 20
     elif shape == "14x14":
         plt.figure(figsize=(16, 16))
-        fontsize1 = 6
-        fontsize2 = 8
+        fontsize1 = 20
+        fontsize2 = 20
     # Create a plot
     plt.imshow(binary_grid, cmap='gray', interpolation='nearest')
     # Set the locations of gridlines explicitly to have them at non
@@ -676,7 +676,8 @@ def stdMeanMapper(grid, models, threshold = 0.3):
                 plt.text(j, i, mean_text, ha='center', va='center', fontsize=fontsize1, color=color)  # North
 
             else:
-                plt.text(j, i, '[' + str(i) + ',' + str(j) + ']', ha='center', va='center', fontsize=fontsize2, color='white')
+                pass
+#                plt.text(j, i, '[' + str(i) + ',' + str(j) + ']', ha='center', va='center', fontsize=fontsize2, color='white')
 
     #  Add row numbering on the left from top to bottom
     for i, label in enumerate(range(len(binary_grid))):

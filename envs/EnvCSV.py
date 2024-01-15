@@ -109,10 +109,10 @@ class CSVGeneratorEnv(gym.Env):
                     pygame.draw.rect(self.screen, (0, 255, 0), (cell_left, cell_top, self.cell_size, self.cell_size))
                 elif self.maze[row, col] == 'G':  # Goal position
                     pygame.draw.rect(self.screen, (255, 0, 0), (cell_left, cell_top, self.cell_size, self.cell_size))
-                
+                elif self.maze[row, col] == 'x':  # Goal position
+                    pygame.draw.rect(self.screen, (255, 180, 0), (cell_left, cell_top, self.cell_size, self.cell_size))
                 if (self._agent_location[0] == row) and (self._agent_location[1] == col):  # Agent position
                     pygame.draw.rect(self.screen, (0, 0, 255), (cell_left, cell_top, self.cell_size, self.cell_size))
-    
         pygame.display.update()
 
     def close(self):
