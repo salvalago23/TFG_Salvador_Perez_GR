@@ -236,6 +236,30 @@ def plot_val_losses(folder_name):
     # Show the plot
     plt.show()
 
+
+def calculate_mean_and_std(folder_name):
+    folder_path = f'../data/OfflineEnsembles/{folder_name}/'
+
+    if not os.path.exists(folder_path):
+        print("ERROR: The folder " + folder_path + " doesn't exist")
+        return
+    
+    csv_file_name = os.path.join(folder_path, 'csv', 'val_loss.csv')
+
+    # Read the data from the CSV file using pandas
+    df = pd.read_csv(csv_file_name)
+
+    # Calculate mean and standard deviation for each model
+    mean_values = df.mean()
+    std_dev_values = df.std()
+
+    # Calculate mean and standard deviation across all models
+    overall_mean = df.stack().mean()
+    overall_std_dev = df.stack().std()
+
+    return mean_values, std_dev_values, overall_mean, overall_std_dev
+
+
 #FUNCIONES PARA CREAR SUBCONJUNTOS DE TRANSICIONES A PARTIR DE LA LISTA COMPLETA
 
 #Esta funcion recibe un grid y devuelve todas las posibles transiciones que se pueden 
@@ -537,12 +561,12 @@ def stdMapper(grid, models, threshold = 0.3):
 
     if shape == "5x5":
         plt.figure(figsize=(8, 8))
-        fontsize1 = 8
-        fontsize2 = 10
+        fontsize1 = 16
+        fontsize2 = 16
     elif shape == "14x14":
         plt.figure(figsize=(16, 16))
-        fontsize1 = 6
-        fontsize2 = 8
+        fontsize1 = 11
+        fontsize2 = 16
     # Create a plot
     plt.imshow(binary_grid, cmap='gray', interpolation='nearest')
     # Set the locations of gridlines explicitly to have them at non
@@ -560,10 +584,10 @@ def stdMapper(grid, models, threshold = 0.3):
                 plt.plot([j - 0.5, j + 0.5], [i - 0.5, i + 0.5], color='black', linewidth=1)
                 plt.plot([j + 0.5, j - 0.5], [i - 0.5, i + 0.5], color='black', linewidth=1)
 
-                text1prob = round(np.linalg.norm(np.std(std_grid[i][j][0], axis=0)), 3)
-                text2prob = round(np.linalg.norm(np.std(std_grid[i][j][1], axis=0)), 3)
-                text3prob = round(np.linalg.norm(np.std(std_grid[i][j][2], axis=0)), 3)
-                text4prob = round(np.linalg.norm(np.std(std_grid[i][j][3], axis=0)), 3)
+                text1prob = round(np.linalg.norm(np.std(std_grid[i][j][0], axis=0)), 2)
+                text2prob = round(np.linalg.norm(np.std(std_grid[i][j][1], axis=0)), 2)
+                text3prob = round(np.linalg.norm(np.std(std_grid[i][j][2], axis=0)), 2)
+                text4prob = round(np.linalg.norm(np.std(std_grid[i][j][3], axis=0)), 2)
 
                 # Add text based on the sector
                 if np.linalg.norm(np.std(std_grid[i][j][0], axis=0)) <= threshold:
@@ -592,7 +616,8 @@ def stdMapper(grid, models, threshold = 0.3):
                 plt.text(j + .3, i + .05, text4prob, ha='center', va='center', fontsize=fontsize1, color=color4prob)  # East
             
             else:
-                plt.text(j, i, '[' + str(i) + ',' + str(j) + ']', ha='center', va='center', fontsize=fontsize2, color='white')
+                pass
+                #plt.text(j, i, '[' + str(i) + ',' + str(j) + ']', ha='center', va='center', fontsize=fontsize2, color='white')
 
     #  Add row numbering on the left from top to bottom
     for i, label in enumerate(range(len(binary_grid))):
