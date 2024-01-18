@@ -4,7 +4,6 @@
 [id2]: https://nubeusc-my.sharepoint.com/:f:/g/personal/salvador_perez_rai_usc_es/EmeTyvYVMS9OuyLWuvRf_eEBgIDsb3z1ewkRNZnxxQTSCw?e=OHTvFn  "OneDrive"
 
 Todo el código y los modelos pueden ser descargados desde este repositorio de [Github][id] o bien desde [OneDrive][id2].
-This is  reference-style link.
 
 Los programas principales replicar los experimentos de este TFG están incluídos en las carpetas ./src/ y ./src2/, que contienen dos flujos de trabajo totalmente independientes. 
 
