@@ -198,10 +198,10 @@ def plot_train_losses(folder_name):
         plt.plot(df[column], label=column, color=color)
 
     # Add labels and legend
-    plt.xlabel('Index')
-    plt.ylabel('Values')
+    plt.xlabel('Epochs (1x10³)')
+    plt.ylabel('Train error')
     plt.legend()
-    plt.title('Data from CSV File')
+    plt.title('Train error for ensemble ' + folder_name)
 
     # Show the plot
     plt.show()
@@ -225,12 +225,13 @@ def plot_val_losses(folder_name):
     for i, column in enumerate(df.columns):
         color=next(colors)
         plt.plot(df[column], label=column, color=color)
-
+        
+    plt.ylim(0, 5)
     # Add labels and legend
-    plt.xlabel('Index')
-    plt.ylabel('Values')
+    plt.xlabel('Epochs (1x10³)')
+    plt.ylabel('Validation error')
     plt.legend()
-    plt.title('Data from CSV File')
+    plt.title('Validation error for ensemble "' + folder_name + '"')
 
     # Show the plot
     plt.show()
