@@ -123,6 +123,7 @@ class OfflineGridWorldEnv(gym.Env):
         else:
             if std >= self.penalty_threshold:
                 reward = self.penalty
+                #Historial que contiene todas las transiciones que supongan una penalizacion
                 self.rewardHistory.append([old_pos, action, new_pos])
                 #truncated = True
             else:
