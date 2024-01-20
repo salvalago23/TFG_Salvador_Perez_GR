@@ -75,9 +75,7 @@ class CSVGeneratorEnv(gym.Env):
 
     def test(self, input):
         """
-        This function is used to test the agent in the environment. It takes as input the current state and the action to be taken and returns the next state.
-        Args:
-            input (np.array): [position, action]
+        This function is used to test dynamics in the environment, without actually calling 'step'.
         """
         position = np.array(input[0:2])
         action = input[2]
